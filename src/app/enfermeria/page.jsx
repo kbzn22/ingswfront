@@ -143,12 +143,6 @@ export default function EnfermeriaPage() {
 
   return (
     <main className="space-y-6">
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Stat title="Pacientes en Espera" value={metrics.total} subtitle="En cola de prioridad" />
-        <Stat title="Casos Críticos" value={metrics.criticos} subtitle="Requieren atención inmediata" />
-        <Stat title="Emergencias" value={metrics.emergencias} subtitle="Casos de emergencia" />
-      </section>
-
       <section className="bg-white rounded-lg shadow-sm p-4 space-y-4">
         <h2 className="text-xl font-semibold">Registrar Nuevo Ingreso</h2>
 
@@ -258,24 +252,6 @@ export default function EnfermeriaPage() {
         {mensaje && <p className="text-green-600 text-sm">{mensaje}</p>}
       </section>
 
-      <section>
-        <h2 className="text-xl font-semibold">Cola de Prioridad</h2>
-        <p className="text-sm text-neutral-600 mb-3">Pacientes ordenados por nivel de emergencia.</p>
-        <div className="space-y-2">
-          {ingresos.map((i) => (
-            <Card key={i.id} className="shadow-sm">
-              <CardContent>
-                <Typography variant="subtitle1" className="font-medium">
-                  {i.paciente.nombre} {i.paciente.apellido} — {i.nivelEmergencia}
-                </Typography>
-                <Typography variant="body2" className="text-neutral-600">
-                  {i.informe}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
     </main>
   );
 }

@@ -1,10 +1,15 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, {useState, useMemo, useEffect} from "react";
 import { Card, CardContent, Typography } from "@mui/material";
+import {router} from "next/client";
+import {useRouter} from "next/navigation";
 
 const BASE_URL = "http://localhost:8080/api";
 
-export default function EnfermeriaPage() {
+
+export default function Page() {
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [cuil, setCuil] = useState("");
   const [paciente, setPaciente] = useState(null);
   const [mostrarFormPaciente, setMostrarFormPaciente] = useState(false);
@@ -17,7 +22,7 @@ export default function EnfermeriaPage() {
     frecuenciaRespiratoria: "",
     sistolica: "",
     diastolica: "",
-    enfermera: "sofia.ramos",
+
   });
   const [formPaciente, setFormPaciente] = useState({
     cuil: "",
@@ -33,25 +38,80 @@ export default function EnfermeriaPage() {
   });
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const metrics = useMemo(() => {
+    const activos = ingresos.filter((i) => i.estadoIngreso !== "FINALIZADO");
+    const total = activos.length;
+    const criticos = activos.filter((i) => i.nivelEmergencia === "CRITICA").length;
+    const emergencias = activos.filter((i) => i.nivelEmergencia === "EMERGENCIA").length;
+    return { total, criticos, emergencias };
+  }, [ingresos]);
+
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch("http://localhost:8080/auth/me", {
+          method: "GET",
+          credentials: "include",
+        });
+        console.log(res);
+        if (!res.ok) {
+          router.push("/login");
+          return;
+        }
+
+
+        setCheckingAuth(false);
+      } catch (e) {
+        router.push("/login");
+      }
+    }
+
+    checkAuth();
+  }, [router]);
+
+  if (checkingAuth) {
+    return (
+        <main className="min-h-screen flex items-center justify-center">
+          <p>Verificando sesión...</p>
+        </main>
+    );
+  }
+
+
+
 
   function handleCuilChange(e) {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 11) setCuil(value);
+    let v = e.target.value.replace(/\D/g, ""); // solo números, ignores hyphens
+
+    if (v.length > 11) v = v.slice(0, 11);
+
+    // Formato XX-XXXXXXXX-X
+    if (v.length <= 2) {
+      setCuil(v);
+    } else if (v.length <= 10) {
+      setCuil(`${v.slice(0, 2)}-${v.slice(2)}`);
+    } else {
+      setCuil(`${v.slice(0, 2)}-${v.slice(2, 10)}-${v.slice(10)}`);
+    }
   }
+
 
   async function buscarPaciente() {
     setError("");
     setMensaje("");
     setMostrarFormPaciente(false);
     setPaciente(null);
+    const limpio = cuil.replace(/\D/g, "");
 
-    if (cuil.length !== 11) {
-      setError("El CUIL debe tener exactamente 11 números.");
+    if (limpio.length !== 11) {
+      setError("El CUIL debe tener 11 dígitos.");
       return;
     }
-
+    const cuilFormateado =
+        `${limpio.slice(0, 2)}-${limpio.slice(2, 10)}-${limpio.slice(10)}`;
     try {
-      const res = await fetch(`${BASE_URL}/pacientes/${cuil}`);
+      const res = await fetch(`${BASE_URL}/pacientes/${cuilFormateado}`);
       
       if (!res.ok) {
         if (res.status === 404) {
@@ -127,7 +187,6 @@ export default function EnfermeriaPage() {
     try {
       const body = {
         cuilPaciente: paciente.cuil,
-        cuilEnfermera: formIngreso.enfermera,
         informe: formIngreso.informe,
         temperatura: parseFloat(formIngreso.temperatura),
         frecuenciaCardiaca: parseFloat(formIngreso.frecuenciaCardiaca),
@@ -141,6 +200,7 @@ export default function EnfermeriaPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        credentials:"include"
       });
 
       if (!res.ok) {
@@ -160,7 +220,7 @@ export default function EnfermeriaPage() {
         frecuenciaRespiratoria: "",
         sistolica: "",
         diastolica: "",
-        enfermera: "sofia.ramos",
+
       });
 
       setPaciente(null);
@@ -170,13 +230,7 @@ export default function EnfermeriaPage() {
     }
   }
 
-  const metrics = useMemo(() => {
-    const activos = ingresos.filter((i) => i.estadoIngreso !== "FINALIZADO");
-    const total = activos.length;
-    const criticos = activos.filter((i) => i.nivelEmergencia === "CRITICA").length;
-    const emergencias = activos.filter((i) => i.nivelEmergencia === "EMERGENCIA").length;
-    return { total, criticos, emergencias };
-  }, [ingresos]);
+
 
   return (
     <main className="space-y-6">
@@ -186,7 +240,7 @@ export default function EnfermeriaPage() {
         <div className="flex items-center gap-2">
           <input
             type="text"
-            placeholder="Ingrese CUIL"
+            placeholder="Ingrese CUIL sin guiones"
             className="border rounded px-2 py-1 flex-1"
             value={cuil}
             onChange={handleCuilChange}

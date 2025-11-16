@@ -14,6 +14,8 @@ export default function Page() {
   const [paciente, setPaciente] = useState(null);
   const [mostrarFormPaciente, setMostrarFormPaciente] = useState(false);
   const [ingresos, setIngresos] = useState([]);
+  const [obrasSociales, setObrasSociales] = useState([]);
+  const [busquedaOS, setBusquedaOS] = useState("");
   const [formIngreso, setFormIngreso] = useState({
     informe: "",
     nivelEmergencia: "",
@@ -38,6 +40,13 @@ export default function Page() {
   });
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const obrasFiltradas = useMemo(() => {
+    const term = busquedaOS.toLowerCase().trim();
+    if (!term) return obrasSociales;
+    return obrasSociales.filter((os) =>
+        os.nombre.toLowerCase().includes(term)
+    );
+  }, [obrasSociales, busquedaOS]);
   const metrics = useMemo(() => {
     const activos = ingresos.filter((i) => i.estadoIngreso !== "FINALIZADO");
     const total = activos.length;
@@ -69,6 +78,25 @@ export default function Page() {
 
     checkAuth();
   }, [router]);
+  useEffect(() => {
+    if (checkingAuth) return;
+
+    async function cargarObrasSociales() {
+      try {
+        const res = await fetch(`${BASE_URL}/obras-sociales`);
+        if (!res.ok) {
+          console.error("Error al cargar obras sociales");
+          return;
+        }
+        const data = await res.json();
+        setObrasSociales(data);
+      } catch (e) {
+        console.error("No se pudieron cargar las obras sociales", e);
+      }
+    }
+
+    cargarObrasSociales();
+  }, [checkingAuth]);
 
   if (checkingAuth) {
     return (
@@ -77,10 +105,6 @@ export default function Page() {
         </main>
     );
   }
-
-
-
-
   function handleCuilChange(e) {
     let v = e.target.value.replace(/\D/g, ""); // solo números, ignores hyphens
 
@@ -306,26 +330,51 @@ export default function Page() {
                 value={formPaciente.localidad}
                 onChange={(e) => setFormPaciente({ ...formPaciente, localidad: e.target.value })}
               />
+              <div className="col-span-2 space-y-2">
+                <p className="text-sm font-medium">Obra Social (opcional)</p>
+
+                {/* Campo de búsqueda */}
+                <input
+                    type="text"
+                    placeholder="Buscar obra social..."
+                    className="border rounded px-2 py-1 w-full"
+                    value={busquedaOS}
+                    onChange={(e) => setBusquedaOS(e.target.value)}
+                />
+
+                {/* Select de obras sociales */}
+                <select
+                    className="border rounded px-2 py-1 w-full"
+                    value={formPaciente.codigo}
+                    onChange={(e) => {
+                      const idSeleccionado = e.target.value;
+                      const os = obrasSociales.find((o) => o.id === idSeleccionado) || null;
+
+                      setFormPaciente((prev) => ({
+                        ...prev,
+                        codigo: idSeleccionado,              // UUID → para idObraSocial
+                        obraSocial: os ? os.nombre : "",     // Nombre → por si lo querés mostrar
+                      }));
+                    }}
+                >
+                  <option value="">Sin obra social</option>
+                  {obrasFiltradas.map((os) => (
+                      <option key={os.id} value={os.id}>
+                        {os.nombre}
+                      </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Número de afiliado (solo tiene sentido si eligió OS) */}
               <input
-                type="text"
-                placeholder="Obra Social"
-                className="border rounded px-2 py-1"
-                value={formPaciente.obraSocial}
-                onChange={(e) => setFormPaciente({ ...formPaciente, obraSocial: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Código OS"
-                className="border rounded px-2 py-1"
-                value={formPaciente.codigo}
-                onChange={(e) => setFormPaciente({ ...formPaciente, codigo: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Número Afiliado"
-                className="border rounded px-2 py-1 col-span-2"
-                value={formPaciente.numeroAfiliado}
-                onChange={(e) => setFormPaciente({ ...formPaciente, numeroAfiliado: e.target.value })}
+                  type="text"
+                  placeholder="Número Afiliado"
+                  className="border rounded px-2 py-1 col-span-2"
+                  value={formPaciente.numeroAfiliado}
+                  onChange={(e) =>
+                      setFormPaciente({ ...formPaciente, numeroAfiliado: e.target.value })
+                  }
               />
             </div>
             <button

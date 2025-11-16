@@ -2,6 +2,8 @@
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, Typography } from "@mui/material";
 
+const BASE_URL = "http://localhost:8080/api";
+
 export default function EnfermeriaPage() {
   const [cuil, setCuil] = useState("");
   const [paciente, setPaciente] = useState(null);
@@ -21,6 +23,7 @@ export default function EnfermeriaPage() {
     cuil: "",
     nombre: "",
     apellido: "",
+    email: "",
     calle: "",
     numero: "",
     localidad: "",
@@ -31,91 +34,124 @@ export default function EnfermeriaPage() {
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
 
+  function handleCuilChange(e) {
+    const value = e.target.value.replace(/\D/g, "");
+    if (value.length <= 11) setCuil(value);
+  }
+
   async function buscarPaciente() {
     setError("");
     setMensaje("");
     setMostrarFormPaciente(false);
     setPaciente(null);
+
+    if (cuil.length !== 11) {
+      setError("El CUIL debe tener exactamente 11 números.");
+      return;
+    }
+
     try {
-      const res = await fetch(`/api/pacientes/${cuil}`);
+      const res = await fetch(`${BASE_URL}/pacientes/${cuil}`);
+      
       if (!res.ok) {
         if (res.status === 404) {
+          setFormPaciente((prev) => ({ ...prev, cuil: cuil }));
           setMostrarFormPaciente(true);
-          throw new Error("Paciente no encontrado. Debe registrarse.");
+          setMensaje("Paciente no encontrado. Ingrese los datos para registrarlo.");
+          return;
         }
-        throw new Error("Error al buscar paciente.");
+        
+        const errorData = await res.json();
+        throw new Error(errorData.message || `Error ${res.status} al buscar paciente.`);
       }
+
       const data = await res.json();
       setPaciente(data);
+      setMensaje(`Paciente encontrado: ${data.nombre} ${data.apellido}`);
+
     } catch (e) {
       setError(e.message);
     }
   }
 
   async function registrarPaciente() {
+    setError("");
+    setMensaje("");
+
     try {
       const body = {
-        cuil: formPaciente.cuil,
+        cuilPaciente: formPaciente.cuil,
         nombre: formPaciente.nombre,
         apellido: formPaciente.apellido,
-        domicilio: {
-          calle: formPaciente.calle,
-          numero: parseInt(formPaciente.numero),
-          localidad: formPaciente.localidad,
-        },
-        afiliado: {
-          obraSocial: {
-            nombre: formPaciente.obraSocial,
-            codigo: formPaciente.codigo,
-          },
-          numeroAfiliado: formPaciente.numeroAfiliado,
-        },
+        email: formPaciente.email,
+        calle: formPaciente.calle,
+        numero: parseInt(formPaciente.numero),
+        localidad: formPaciente.localidad,
+        ...(formPaciente.codigo && { idObraSocial: formPaciente.codigo }), 
+        ...(formPaciente.codigo && { numeroAfiliado: formPaciente.numeroAfiliado }),
       };
 
-      const res = await fetch("/api/pacientes", {
+      const res = await fetch(`${BASE_URL}/pacientes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
-      if (!res.ok) throw new Error("Error al registrar paciente.");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Error al registrar paciente.");
+      }
+
       const data = await res.json();
       setPaciente(data);
       setMostrarFormPaciente(false);
       setMensaje("Paciente registrado correctamente.");
-    } catch {
-      setError("Hubo un error al registrar el paciente.");
+    } catch (e) {
+      setError(e.message);
     }
   }
 
   async function registrarIngreso() {
     setError("");
     setMensaje("");
+
+    const nivelMap = {
+        "CRITICA": 5,
+        "EMERGENCIA": 4,
+        "URGENCIA": 3,
+        "URGENCIA_MENOR": 2,
+        "SIN_URGENCIA": 1,
+    };
+    const nivelInt = nivelMap[formIngreso.nivelEmergencia];
+
     try {
       const body = {
-        cuil: paciente.cuil,
+        cuilPaciente: paciente.cuil,
+        cuilEnfermera: formIngreso.enfermera,
         informe: formIngreso.informe,
-        nivelEmergencia: formIngreso.nivelEmergencia,
         temperatura: parseFloat(formIngreso.temperatura),
         frecuenciaCardiaca: parseFloat(formIngreso.frecuenciaCardiaca),
         frecuenciaRespiratoria: parseFloat(formIngreso.frecuenciaRespiratoria),
-        tensionArterial: {
-          sistolica: parseFloat(formIngreso.sistolica),
-          diastolica: parseFloat(formIngreso.diastolica),
-        },
-        enfermera: formIngreso.enfermera,
+        frecuenciaSistolica: parseFloat(formIngreso.sistolica), 
+        frecuenciaDiastolica: parseFloat(formIngreso.diastolica),
+        nivel: nivelInt,
       };
 
-      const res = await fetch("/api/ingresos", {
+      const res = await fetch(`${BASE_URL}/ingresos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
-      if (!res.ok) throw new Error("Error al registrar ingreso.");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Error al registrar ingreso.");
+      }
+
       const data = await res.json();
       setIngresos((prev) => [...prev, data]);
       setMensaje("Ingreso registrado correctamente.");
+
       setFormIngreso({
         informe: "",
         nivelEmergencia: "",
@@ -126,10 +162,11 @@ export default function EnfermeriaPage() {
         diastolica: "",
         enfermera: "sofia.ramos",
       });
+
       setPaciente(null);
       setCuil("");
-    } catch {
-      setError("Hubo un error al registrar el ingreso.");
+    } catch (e) {
+      setError(e.message);
     }
   }
 
@@ -149,10 +186,10 @@ export default function EnfermeriaPage() {
         <div className="flex items-center gap-2">
           <input
             type="text"
-            placeholder="CUIL (##-########-#)"
+            placeholder="Ingrese CUIL"
             className="border rounded px-2 py-1 flex-1"
             value={cuil}
-            onChange={(e) => setCuil(e.target.value)}
+            onChange={handleCuilChange}
           />
           <button
             onClick={buscarPaciente}
@@ -186,6 +223,13 @@ export default function EnfermeriaPage() {
                 className="border rounded px-2 py-1"
                 value={formPaciente.apellido}
                 onChange={(e) => setFormPaciente({ ...formPaciente, apellido: e.target.value })}
+              />
+               <input
+                type="email"
+                placeholder="Email"
+                className="border rounded px-2 py-1 col-span-2"
+                value={formPaciente.email}
+                onChange={(e) => setFormPaciente({ ...formPaciente, email: e.target.value })}
               />
               <input
                 type="text"

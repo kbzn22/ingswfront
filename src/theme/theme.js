@@ -11,7 +11,9 @@ export const theme = createTheme({
     info: { main: '#0ea5e9' },
     success: { main: '#22c55e' },
     background: { default: '#f8fafc', paper: '#ffffff' },
+    neutral: { main: '#64748b', contrastText: '#fff'},
     text: { primary: '#0f172a', secondary: '#475569' }
+    
   },
   typography: {
     fontFamily: ['Inter','system-ui','Segoe UI','Roboto','Helvetica','Arial','sans-serif'].join(',')

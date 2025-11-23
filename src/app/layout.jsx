@@ -13,11 +13,12 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen bg-brand-bg text-brand-text antialiased">
         <ThemeRegistry>
           <Header />
-          <div className="mx-auto w-full max-w-6xl p-6">
+          <main className="mx-auto w-full max-w-6xl">
             {children}
-          </div>
+          </main>
         </ThemeRegistry>
       </body>
     </html>
   );
 }
+

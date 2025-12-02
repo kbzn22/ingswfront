@@ -177,66 +177,66 @@ export default function Page() {
   }
 
   return (
-  <main className="min-h-screen flex flex-col md:flex-row gap-6">
-    {/* IZQUIERDA */}
-    <section className="basis-1/2 bg-white rounded-lg shadow-sm p-4 space-y-4">
-      <h2 className="text-xl font-semibold">Registrar Nuevo Ingreso</h2>
+    <main className="min-h-screen flex flex-col md:flex-row gap-6">
+      {/* IZQUIERDA */}
+      <section className="basis-1/2 bg-white rounded-lg shadow-sm p-4 space-y-4">
+        <h2 className="text-xl font-semibold">Registrar Nuevo Ingreso</h2>
 
-      {/* 1. BUSCAR PACIENTE */}
-      <BuscarPaciente
-        cuil={cuil}
-        onCuilChange={handleCuilChange}
-        onBuscar={buscarPaciente}
-      />
-
-      {/* 2. FORM PACIENTE (si no existe) */}
-      {mostrarFormPaciente && (
-        <FormPaciente
-          formPaciente={formPaciente}
-          setFormPaciente={setFormPaciente}
-          obrasSociales={obrasSociales}
-          onSubmit={registrarPaciente}
-          onCancel={() => {
-            setMostrarFormPaciente(false);
-            setFormPaciente({
-              cuil: "",
-              nombre: "",
-              apellido: "",
-              email: "",
-              calle: "",
-              numero: "",
-              localidad: "",
-              codigo: "",
-              numeroAfiliado: "",
-            });
-            setError("");
-            setMensaje("");
-          }}
+        {/* 1. BUSCAR PACIENTE */}
+        <BuscarPaciente
+          cuil={cuil}
+          onCuilChange={handleCuilChange}
+          onBuscar={buscarPaciente}
         />
-      )}
 
-      {/* 3. FORM INGRESO (si existe paciente) */}
-      {paciente && (
-        <FormIngreso
-          paciente={paciente}
-          onCreate={handleCreateIngreso}
-          onCancel={cancelarIngreso}
-        />
-      )}
+        {/* 2. FORM PACIENTE (si no existe) */}
+        {mostrarFormPaciente && (
+          <FormPaciente
+            formPaciente={formPaciente}
+            setFormPaciente={setFormPaciente}
+            obrasSociales={obrasSociales}
+            onSubmit={registrarPaciente}
+            onCancel={() => {
+              setMostrarFormPaciente(false);
+              setFormPaciente({
+                cuil: "",
+                nombre: "",
+                apellido: "",
+                email: "",
+                calle: "",
+                numero: "",
+                localidad: "",
+                codigo: "",
+                numeroAfiliado: "",
+              });
+              setError("");
+              setMensaje("");
+            }}
+          />
+        )}
 
-      {/* 4. ERRORES Y MENSAJES */}
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      {mensaje && <p className="text-green-600 text-sm">{mensaje}</p>}
-    </section>
+        {/* 3. FORM INGRESO (si existe paciente) */}
+        {paciente && (
+          <FormIngreso
+            paciente={paciente}
+            onCreate={handleCreateIngreso}
+            onCancel={cancelarIngreso}
+          />
+        )}
 
-    {/* DERECHA */}
-    <section className="basis-1/2 bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col">
-      <h2 className="text-xl font-semibold mb-2">Cola de ingresos</h2>
-      <div className="flex-1 flex items-start">
-        <ColaIngresos ingresos={ingresos} />
-      </div>
-    </section>
-  </main>
-);
+        {/* 4. ERRORES Y MENSAJES */}
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {mensaje && <p className="text-green-600 text-sm">{mensaje}</p>}
+      </section>
+
+      {/* DERECHA */}
+      <section className="basis-1/2 bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col">
+        <h2 className="text-xl font-semibold mb-2">Cola de ingresos</h2>
+        <div className="flex-1 flex items-start">
+          <ColaIngresos ingresos={ingresos} />
+        </div>
+      </section>
+    </main>
+  );
 
 }

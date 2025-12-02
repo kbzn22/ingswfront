@@ -1,120 +1,174 @@
 "use client";
 
+import { Stack, TextField, MenuItem, Button, Typography } from "@mui/material";
+import { useState } from "react";
+
 export default function FormPaciente({
   formPaciente,
   setFormPaciente,
   obrasSociales,
-  obrasFiltradas,
-  busquedaOS,
-  setBusquedaOS,
-  onSubmit
+  onSubmit,
+  onCancel, // ✅ nuevo prop para cancelar
 }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (field) => (e) => {
+    setFormPaciente({ ...formPaciente, [field]: e.target.value });
+  };
+
+  // ✅ limpiar correctamente los campos (no los borra del control)
+  const handleClear = () => {
+    setFormPaciente({
+      cuil: "",
+      nombre: "",
+      apellido: "",
+      email: "",
+      calle: "",
+      numero: "",
+      localidad: "",
+      codigo: "",
+      numeroAfiliado: "",
+    });
+  };
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    await onSubmit?.();
+    setLoading(false);
+  }
+
   return (
-    <div className="border rounded p-3 bg-neutral-50 space-y-2">
-      <p className="font-medium">Registrar nuevo paciente</p>
-
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          type="text"
-          placeholder="CUIL"
-          className="border rounded px-2 py-1 col-span-2"
-          value={formPaciente.cuil}
-          onChange={(e) => setFormPaciente({ ...formPaciente, cuil: e.target.value })}
-        />
-
-        <input
-          type="text"
-          placeholder="Nombre"
-          className="border rounded px-2 py-1"
-          value={formPaciente.nombre}
-          onChange={(e) => setFormPaciente({ ...formPaciente, nombre: e.target.value })}
-        />
-
-        <input
-          type="text"
-          placeholder="Apellido"
-          className="border rounded px-2 py-1"
-          value={formPaciente.apellido}
-          onChange={(e) => setFormPaciente({ ...formPaciente, apellido: e.target.value })}
-        />
-
-        <input
-          type="email"
-          placeholder="Email"
-          className="border rounded px-2 py-1 col-span-2"
-          value={formPaciente.email}
-          onChange={(e) => setFormPaciente({ ...formPaciente, email: e.target.value })}
-        />
-
-        <input
-          type="text"
-          placeholder="Calle"
-          className="border rounded px-2 py-1"
-          value={formPaciente.calle}
-          onChange={(e) => setFormPaciente({ ...formPaciente, calle: e.target.value })}
-        />
-
-        <input
-          type="number"
-          placeholder="Número"
-          className="border rounded px-2 py-1"
-          value={formPaciente.numero}
-          onChange={(e) => setFormPaciente({ ...formPaciente, numero: e.target.value })}
-        />
-
-        <input
-          type="text"
-          placeholder="Localidad"
-          className="border rounded px-2 py-1 col-span-2"
-          value={formPaciente.localidad}
-          onChange={(e) => setFormPaciente({ ...formPaciente, localidad: e.target.value })}
-        />
-
-        <div className="col-span-2 space-y-2">
-          <p className="text-sm font-medium">Obra Social (opcional)</p>
-
-          <input
-            type="text"
-            placeholder="Buscar obra social..."
-            className="border rounded px-2 py-1 w-full"
-            value={busquedaOS}
-            onChange={(e) => setBusquedaOS(e.target.value)}
-          />
-
-          <select
-            className="border rounded px-2 py-1 w-full"
-            value={formPaciente.codigo}
-            onChange={(e) => {
-              const id = e.target.value;
-              setFormPaciente((prev) => ({ ...prev, codigo: id }));
-            }}
-          >
-            <option value="">Sin obra social</option>
-            {obrasFiltradas.map((os) => (
-              <option key={os.id} value={os.id}>
-                {os.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <input
-          type="text"
-          placeholder="Número Afiliado"
-          className="border rounded px-2 py-1 col-span-2"
-          value={formPaciente.numeroAfiliado}
-          onChange={(e) =>
-            setFormPaciente({ ...formPaciente, numeroAfiliado: e.target.value })
-          }
-        />
-      </div>
-
-      <button
-        onClick={onSubmit}
-        className="mt-2 bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
+    <form onSubmit={handleSubmit}>
+      <Stack
+        spacing={2}
+        sx={{
+          p: 2,
+          border: "1px solid #e0e0e0",
+          borderRadius: 2,
+          bgcolor: "#fafafa",
+        }}
       >
-        Registrar Paciente
-      </button>
-    </div>
+        <Typography variant="h6" fontWeight="600">
+          Registrar nuevo paciente
+        </Typography>
+
+        {/* CUIL */}
+        <TextField
+          label="CUIL"
+          value={formPaciente.cuil}
+          onChange={handleChange("cuil")}
+          placeholder="##-########-#"
+          fullWidth
+        />
+
+        {/* Nombre y Apellido */}
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+          <TextField
+            label="Nombre"
+            value={formPaciente.nombre}
+            onChange={handleChange("nombre")}
+            fullWidth
+          />
+          <TextField
+            label="Apellido"
+            value={formPaciente.apellido}
+            onChange={handleChange("apellido")}
+            fullWidth
+          />
+        </Stack>
+
+        {/* Email */}
+        <TextField
+          label="Email"
+          type="email"
+          value={formPaciente.email}
+          onChange={handleChange("email")}
+          fullWidth
+        />
+
+        {/* Calle y Número */}
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+          <TextField
+            label="Calle"
+            value={formPaciente.calle}
+            onChange={handleChange("calle")}
+            fullWidth
+          />
+          <TextField
+            label="Número"
+            type="number"
+            value={formPaciente.numero}
+            onChange={handleChange("numero")}
+            fullWidth
+          />
+        </Stack>
+
+        {/* Localidad */}
+        <TextField
+          label="Localidad"
+          value={formPaciente.localidad}
+          onChange={handleChange("localidad")}
+          fullWidth
+        />
+
+        {/* Obra Social */}
+        <TextField
+          select
+          label="Obra Social (opcional)"
+          value={formPaciente.codigo}
+          onChange={(e) => {
+            const id = e.target.value;
+            setFormPaciente((prev) => ({
+              ...prev,
+              codigo: id || "",
+              ...(id === "" ? { numeroAfiliado: "" } : {}),
+            }));
+          }}
+          fullWidth
+        >
+          <MenuItem value="">Sin obra social</MenuItem>
+          {obrasSociales.map((os) => (
+            <MenuItem key={os.id} value={os.id}>
+              {os.nombre}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        {/* Número Afiliado */}
+        <TextField
+          label="Número de Afiliado"
+          value={formPaciente.numeroAfiliado}
+          onChange={handleChange("numeroAfiliado")}
+          fullWidth
+          disabled={!formPaciente.codigo}
+        />
+
+        {/* Botones */}
+        <Stack direction="row" spacing={2}>
+          <Button type="submit" variant="contained" disabled={loading}>
+            Registrar Paciente
+          </Button>
+
+          <Button
+            variant="outlined"
+            color="neutral"
+            onClick={handleClear}
+            disabled={loading}
+          >
+            Limpiar
+          </Button>
+
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={onCancel}
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+        </Stack>
+      </Stack>
+    </form>
   );
 }

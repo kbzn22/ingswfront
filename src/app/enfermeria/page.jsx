@@ -1,15 +1,19 @@
 "use client";
-import React, {useState, useMemo, useEffect} from "react";
-import { Card, CardContent, Typography } from "@mui/material";
+
+import React, { useState, useMemo, useEffect } from "react";
 import BuscarPaciente from "@/components/inputs/BuscarPaciente";
 import FormPaciente from "@/components/inputs/FormPaciente";
 import FormIngreso from "@/components/inputs/FormIngreso";
+import ColaIngresos from "@/components/ColaIngreso";
+
 import { crearIngresoDTO } from "@/models/IngresoDTO";
 import { NIVEL_BY_VALUE } from "@/lib/enums";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 
-const BASE_URL = "http://localhost:8080/api";
-
+import { buscarPacientePorCuil, registrarPacienteService } from "@/services/pacienteService";
+import { registrarIngresoService, cargarObrasSocialesService, obtenerColaIngresoService} from "@/services/ingresoService";
+import { verificarSesionService } from "@/services/authService";
+import { limpiarCuil, formatearCuil11 } from "@/lib/cuil";
 
 export default function Page() {
   const router = useRouter();
@@ -17,9 +21,8 @@ export default function Page() {
   const [cuil, setCuil] = useState("");
   const [paciente, setPaciente] = useState(null);
   const [mostrarFormPaciente, setMostrarFormPaciente] = useState(false);
-  const [ingresos, setIngresos] = useState([]);
+  const [ingresos, setIngresos] = useState([]); // por ahora no lo tocamos
   const [obrasSociales, setObrasSociales] = useState([]);
-  const [busquedaOS, setBusquedaOS] = useState("");
   const [formPaciente, setFormPaciente] = useState({
     cuil: "",
     nombre: "",
@@ -34,77 +37,43 @@ export default function Page() {
   });
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
-  const obrasFiltradas = useMemo(() => {
-    const term = busquedaOS.toLowerCase().trim();
-    if (!term) return obrasSociales;
-    return obrasSociales.filter((os) =>
-        os.nombre.toLowerCase().includes(term)
-    );
-  }, [obrasSociales, busquedaOS]);
-  const metrics = useMemo(() => {
-    const activos = ingresos.filter((i) => i.estadoIngreso !== "FINALIZADO");
-    const total = activos.length;
-    const criticos = activos.filter((i) => i.nivelEmergencia === "CRITICA").length;
-    const emergencias = activos.filter((i) => i.nivelEmergencia === "EMERGENCIA").length;
-    return { total, criticos, emergencias };
-  }, [ingresos]);
-
 
   useEffect(() => {
-    async function checkAuth() {
+    async function verificar() {
       try {
-        const res = await fetch("http://localhost:8080/auth/me", {
-          method: "GET",
-          credentials: "include",
-        });
-        console.log(res);
-        if (!res.ok) {
+        const ok = await verificarSesionService();
+        if (!ok) {
           router.push("/login");
           return;
         }
-
-
         setCheckingAuth(false);
-      } catch (e) {
+      } catch {
         router.push("/login");
       }
     }
 
-    checkAuth();
+    verificar();
   }, [router]);
+
   useEffect(() => {
-    if (checkingAuth) return;
-
-    async function cargarObrasSociales() {
-      try {
-        const res = await fetch(`${BASE_URL}/obras-sociales`);
-        if (!res.ok) {
-          console.error("Error al cargar obras sociales");
-          return;
-        }
-        const data = await res.json();
-        setObrasSociales(data);
-      } catch (e) {
-        console.error("No se pudieron cargar las obras sociales", e);
-      }
+  async function cargarCola() {
+    try {
+      const cola = await obtenerColaIngresosService();
+      setIngresos(cola);
+    } catch (e) {
+      console.error("Error cargando cola de ingresos:", e);
     }
-
-    cargarObrasSociales();
-  }, [checkingAuth]);
-
-  if (checkingAuth) {
-    return (
-        <main className="min-h-screen flex items-center justify-center">
-          <p>Verificando sesión...</p>
-        </main>
-    );
   }
+
+  cargarCola();
+}, []);
+
+
   function handleCuilChange(e) {
-    let v = e.target.value.replace(/\D/g, ""); // solo números, ignores hyphens
+    let v = limpiarCuil(e.target.value);
 
     if (v.length > 11) v = v.slice(0, 11);
 
-    // Formato XX-XXXXXXXX-X
     if (v.length <= 2) {
       setCuil(v);
     } else if (v.length <= 10) {
@@ -114,39 +83,45 @@ export default function Page() {
     }
   }
 
-
   async function buscarPaciente() {
     setError("");
     setMensaje("");
     setMostrarFormPaciente(false);
     setPaciente(null);
-    const limpio = cuil.replace(/\D/g, "");
 
+    const limpio = limpiarCuil(cuil);
     if (limpio.length !== 11) {
       setError("El CUIL debe tener 11 dígitos.");
       return;
     }
-    const cuilFormateado =
-        `${limpio.slice(0, 2)}-${limpio.slice(2, 10)}-${limpio.slice(10)}`;
+
+    const cuilFormateado = formatearCuil11(limpio);
+
     try {
-      const res = await fetch(`${BASE_URL}/pacientes/${cuilFormateado}`);
-      
-      if (!res.ok) {
-        if (res.status === 404) {
-          setFormPaciente((prev) => ({ ...prev, cuil: cuil }));
-          setMostrarFormPaciente(true);
-          setMensaje("Paciente no encontrado. Ingrese los datos para registrarlo.");
-          return;
-        }
-        
-        const errorData = await res.json();
-        throw new Error(errorData.message || `Error ${res.status} al buscar paciente.`);
+      const data = await buscarPacientePorCuil(cuilFormateado);
+
+      if (data) {
+        setPaciente(data);
+        setMensaje(`Paciente encontrado: ${data.nombre} ${data.apellido}`);
+        return;
       }
 
-      const data = await res.json();
-      setPaciente(data);
-      setMensaje(`Paciente encontrado: ${data.nombre} ${data.apellido}`);
+      setFormPaciente((prev) => ({ ...prev, cuil }));
 
+      if (obrasSociales.length === 0) {
+        try {
+          const osData = await cargarObrasSocialesService();
+          setObrasSociales(osData);
+        } catch (e) {
+          console.error("No se pudieron cargar las obras sociales", e);
+          setError("No se pudieron cargar las obras sociales.");
+        }
+      }
+
+      setMostrarFormPaciente(true);
+      setMensaje(
+        "Paciente no encontrado. Ingrese los datos para registrarlo."
+      );
     } catch (e) {
       setError(e.message);
     }
@@ -157,30 +132,8 @@ export default function Page() {
     setMensaje("");
 
     try {
-      const body = {
-        cuilPaciente: formPaciente.cuil,
-        nombre: formPaciente.nombre,
-        apellido: formPaciente.apellido,
-        email: formPaciente.email,
-        calle: formPaciente.calle,
-        numero: parseInt(formPaciente.numero),
-        localidad: formPaciente.localidad,
-        ...(formPaciente.codigo && { idObraSocial: formPaciente.codigo }), 
-        ...(formPaciente.codigo && { numeroAfiliado: formPaciente.numeroAfiliado }),
-      };
+      const data = await registrarPacienteService(formPaciente);
 
-      const res = await fetch(`${BASE_URL}/pacientes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Error al registrar paciente.");
-      }
-
-      const data = await res.json();
       setPaciente(data);
       setMostrarFormPaciente(false);
       setMensaje("Paciente registrado correctamente.");
@@ -202,97 +155,88 @@ export default function Page() {
         nivel: NIVEL_BY_VALUE[dto.nivelEmergencia]?.score,
       });
 
-      await registrarIngresoDTO(ingresoDTO);
-
+      await registrarIngresoService(ingresoDTO);
+      const nuevaCola = await obtenerColaIngresosService(); 
+      setIngresos(nuevaCola);
       resetForm();
     } catch (error) {
       setError(error.message);
     }
   }
 
-
-  async function registrarIngresoDTO(dto) {
-  setError("");
-  setMensaje("");
-
-    try {
-      const res = await fetch(`${BASE_URL}/ingresos`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(dto),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Error al registrar ingreso.");
-      }
-
-      const ingreso = await res.json();
-      setIngresos((prev) => [...prev, ingreso]);
-      setMensaje("Ingreso registrado correctamente.");
-
-      setPaciente(null);
-      setCuil("");
-
-    } catch (e) {
-      setError(e.message);
-      throw e;  
-    }
-  } 
-
   function cancelarIngreso() {
     setPaciente(null);
   }
 
-  return (
-  <main className="space-y-6">
+  if (checkingAuth) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <p>Verificando sesión...</p>
+      </main>
+    );
+  }
 
-    <section className="bg-white rounded-lg shadow-sm p-4 space-y-4">
+  return (
+  <main className="min-h-screen flex flex-col md:flex-row gap-6">
+    {/* IZQUIERDA */}
+    <section className="basis-1/2 bg-white rounded-lg shadow-sm p-4 space-y-4">
       <h2 className="text-xl font-semibold">Registrar Nuevo Ingreso</h2>
 
-      {/** ---------------------------
-       *  1. BUSCAR PACIENTE
-       * --------------------------- */}
+      {/* 1. BUSCAR PACIENTE */}
       <BuscarPaciente
         cuil={cuil}
         onCuilChange={handleCuilChange}
         onBuscar={buscarPaciente}
       />
 
-      {/** ---------------------------
-       *  2. FORMULARIO DE REGISTRO DE PACIENTE (si no existe)
-       * --------------------------- */}
+      {/* 2. FORM PACIENTE (si no existe) */}
       {mostrarFormPaciente && (
         <FormPaciente
           formPaciente={formPaciente}
           setFormPaciente={setFormPaciente}
-          obrasFiltradas={obrasFiltradas}
-          busquedaOS={busquedaOS}
-          setBusquedaOS={setBusquedaOS}
+          obrasSociales={obrasSociales}
           onSubmit={registrarPaciente}
+          onCancel={() => {
+            setMostrarFormPaciente(false);
+            setFormPaciente({
+              cuil: "",
+              nombre: "",
+              apellido: "",
+              email: "",
+              calle: "",
+              numero: "",
+              localidad: "",
+              codigo: "",
+              numeroAfiliado: "",
+            });
+            setError("");
+            setMensaje("");
+          }}
         />
       )}
 
-      {/** ---------------------------
-       *  3. FORMULARIO DE INGRESO (si el paciente existe)
-       * --------------------------- */}
+      {/* 3. FORM INGRESO (si existe paciente) */}
       {paciente && (
-        <FormIngreso 
-          paciente={paciente} 
+        <FormIngreso
+          paciente={paciente}
           onCreate={handleCreateIngreso}
           onCancel={cancelarIngreso}
         />
       )}
 
-
-      {/** ---------------------------
-       *  4. MENSAJES DE ERROR / OK
-       * --------------------------- */}
+      {/* 4. ERRORES Y MENSAJES */}
       {error && <p className="text-red-600 text-sm">{error}</p>}
       {mensaje && <p className="text-green-600 text-sm">{mensaje}</p>}
     </section>
 
+    {/* DERECHA */}
+    <section className="basis-1/2 bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col">
+      <h2 className="text-xl font-semibold mb-2">Cola de ingresos</h2>
+      <div className="flex-1 flex items-start">
+        <ColaIngresos ingresos={ingresos} />
+      </div>
+    </section>
   </main>
-  );
+);
+
 }

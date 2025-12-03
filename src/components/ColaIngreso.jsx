@@ -5,7 +5,7 @@ import { Card, CardContent, Typography } from "@mui/material";
 export default function ColaIngresos({ ingresos, onSelect }) {
     return (
         <div className="w-full space-y-3 overflow-y-auto max-h-[80vh] pr-2">
-            {ingresos.map((ing) => (
+            {ingresos.map((ing, index) => (
                 <Card
                     key={ing.idIngreso}
                     variant="outlined"
@@ -18,22 +18,28 @@ export default function ColaIngresos({ ingresos, onSelect }) {
                     onClick={() => onSelect && onSelect(ing)}
                 >
                     <CardContent>
+                        {/* --- Apellido + Nombre en una sola línea --- */}
                         <Typography variant="subtitle1" fontWeight={600}>
-                            {ing.nombre || ing.nombrePaciente || "Paciente sin nombre"}
+                            {index + 1}.{" "}
+                            {(ing.apellido || "") +
+                                ", " +
+                                (ing.nombre || "")}
                         </Typography>
-                        {ing.apellido || ing.apellidoPaciente ? (
-                            <Typography variant="subtitle1" fontWeight={600}>
-                                {ing.apellido || ing.apellidoPaciente}
-                            </Typography>
-                        ) : null}
 
+                        {/* --- CUIL --- */}
+                        {ing.cuil && (
+                            <Typography variant="body2" color="text.secondary">
+                                CUIL: {ing.cuil}
+                            </Typography>
+                        )}
+
+                        {/* --- Nivel + nombreNivel --- */}
                         <Typography variant="body2">
                             Nivel: {ing.nivel}{" "}
                             {ing.nombreNivel ? `· ${ing.nombreNivel}` : ""}
                         </Typography>
-                        <Typography variant="body2">
-                            Estado: {ing.estado || "PENDIENTE"}
-                        </Typography>
+
+                        {/* Estado eliminado */}
                     </CardContent>
                 </Card>
             ))}

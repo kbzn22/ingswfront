@@ -8,7 +8,6 @@ import ColaIngresos from "@/components/ColaIngreso";
 import DetalleIngresoModal from "@/components/DetalleIngreso";
 
 import { crearIngresoDTO } from "@/models/IngresoDTO";
-import { NIVEL_BY_VALUE } from "@/lib/enums";
 import { useRouter } from "next/navigation";
 
 import { buscarPacientePorCuil, registrarPacienteService } from "@/services/pacienteService";
@@ -70,8 +69,8 @@ export default function Page() {
     }
   }
 
-  cargarCola();
-}, []);
+    cargarCola();
+  }, []);
 
   async function handleSelectIngreso(itemCola) {
     try {
@@ -176,13 +175,17 @@ export default function Page() {
         frecuenciaRespiratoria: dto.signosVitales.frecuenciaRespiratoria,
         frecuenciaSistolica: dto.signosVitales.frecuenciaSistolica,
         frecuenciaDiastolica: dto.signosVitales.frecuenciaDiastolica,
-        nivel: NIVEL_BY_VALUE[dto.nivelEmergencia]?.score,
+        nivel: dto.nivel,
       });
 
       await registrarIngresoService(ingresoDTO);
       const nuevaCola = await fetchCola();
       setIngresos(nuevaCola);
+
       resetForm();
+      cancelarIngreso();
+      setMensaje("Ingreso registrado correctamente.");
+      setError("");
     } catch (error) {
       setError(error.message);
     }
@@ -205,7 +208,7 @@ export default function Page() {
     <main className="min-h-screen flex flex-col md:flex-row bg-white">
       {/* IZQUIERDA */}
       <section className="basis-1/2 bg-white rounded-lg shadow-sm p-4 space-y-4">
-        <h2 className="text-xl font-semibold">Registrar Nuevo Ingreso</h2>
+        <h2 className="text-xl font-semibold">Registrar nuevo Ingreso</h2>
 
         {/* 1. BUSCAR PACIENTE */}
         <BuscarPaciente
@@ -256,7 +259,7 @@ export default function Page() {
 
       {/* DERECHA */}
       <section className="basis-1/2 bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col">
-        <h2 className="text-xl font-semibold mb-2">Cola de ingresos</h2>
+        <h2 className="text-xl font-semibold mb-2">Cola de Ingresos pendientes de Atencion</h2>
         <div className="flex-1 flex items-start">
           <ColaIngresos ingresos={ingresos} onSelect={handleSelectIngreso} />
         </div>

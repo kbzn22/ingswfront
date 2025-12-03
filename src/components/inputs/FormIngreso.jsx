@@ -7,7 +7,7 @@ import { NIVEL_EMERGENCIA } from "@/lib/enums";
 export default function FormIngreso({ paciente, onCreate, onCancel }) {
 
   const [informe, setInforme] = useState("");
-  const [nivelEmergencia, setNivelEmergencia] = useState("URGENCIA_MENOR");
+  const [nivelEmergencia, setNivelEmergencia] = useState(4);
   const [temperatura, setTemperatura] = useState("");
   const [frecuenciaCardiaca, setFrecuenciaCardiaca] = useState("");
   const [frecuenciaRespiratoria, setFrecuenciaRespiratoria] = useState("");
@@ -35,7 +35,7 @@ export default function FormIngreso({ paciente, onCreate, onCancel }) {
     const dto = {
       cuil: paciente.cuil,   // identificador real del paciente
       informe: informe.trim(),
-      nivelEmergencia,
+      nivel: nivelEmergencia,
 
       signosVitales: {
         temperatura: temperatura ? parseFloat(temperatura.replace(",", ".")) : null,
@@ -43,8 +43,9 @@ export default function FormIngreso({ paciente, onCreate, onCancel }) {
         frecuenciaRespiratoria: frecuenciaRespiratoria ? Number(frecuenciaRespiratoria) : null,
         frecuenciaSistolica: frecuenciaSistolica ? Number(frecuenciaSistolica) : null,
         frecuenciaDiastolica: frecuenciaDiastolica ? Number(frecuenciaDiastolica) : null,
-      },
+      }
     };
+    console.log("DTO ENVIADO AL BACK:", dto);
 
     onCreate?.(dto, resetForm);
   }
@@ -77,11 +78,11 @@ export default function FormIngreso({ paciente, onCreate, onCancel }) {
           select
           label="Nivel de Emergencia"
           value={nivelEmergencia}
-          onChange={(e) => setNivelEmergencia(e.target.value)}
+          onChange={(e) => setNivelEmergencia(Number(e.target.value))}
           fullWidth
         >
           {NIVEL_EMERGENCIA.map(n => (
-            <MenuItem key={n.value} value={n.value}>
+            <MenuItem key={n.numero} value={n.numero}>
               {n.label}
             </MenuItem>
           ))}
@@ -148,7 +149,7 @@ export default function FormIngreso({ paciente, onCreate, onCancel }) {
 
           <Button 
             variant="outlined" 
-            color="neutral" 
+            color="error" 
             onClick={onCancel}
           >
             Cancelar

@@ -1,36 +1,75 @@
 "use client";
 
-import { AppBar, Toolbar, Typography, Button } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Chip, Box } from "@mui/material";
 import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+    obtenerUsuarioActualService,
+    logoutService,
+} from "@/services/authService";
 
 export default function Header() {
     const router = useRouter();
     const pathname = usePathname();
-
-    // No muestres el botón en /login
     const showLogout = pathname !== "/login";
+
+    const [usuario, setUsuario] = useState(null);
+
+    useEffect(() => {
+        async function cargarUsuario() {
+            try {
+                const data = await obtenerUsuarioActualService();
+                setUsuario(data);
+            } catch (e) {
+                console.error("No se pudo obtener usuario:", e);
+            }
+        }
+
+        // solo ejecuta la llamada si NO estás en /login
+        if (pathname !== "/login") {
+            cargarUsuario();
+        }
+    }, [pathname]);
 
     async function handleLogout() {
         try {
-            await fetch("http://localhost:8080/auth/logout", {
-                method: "POST",
-                credentials: "include",
-            });
-        } catch (e) {
-            console.error("Error al hacer logout", e);
+            await logoutService();
         } finally {
-            // Siempre te vas al login
             router.push("/login");
         }
     }
 
     return (
-        <AppBar position="sticky" color="primary">
-            <Toolbar className="mx-auto w-full max-w-6xl">
-                <Typography variant="h6" sx={{ flexGrow: 1 }}>
+        <AppBar position="sticky" color="primary" elevation={2}>
+            <Toolbar className="mx-auto w-full max-w-6xl flex justify-between">
+                {/* IZQUIERDA */}
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     Hospital Virgen del Valle
                 </Typography>
 
+                {/* CENTRO — SOLO fuera de /login */}
+                {showLogout && usuario && (
+                    <Box className="hidden md:flex gap-2 items-center">
+                        <Chip
+                            label={`${usuario.nombre} ${usuario.apellido}`}
+                            color="default"
+                            variant="filled"
+                            size="small"
+                        />
+                        <Chip
+                            label={usuario.rol}
+                            color="secondary"
+                            size="small"
+                        />
+                        <Chip
+                            label={usuario.cuil}
+                            variant="outlined"
+                            size="small"
+                        />
+                    </Box>
+                )}
+
+                {/* DERECHA — botón logout SOLO fuera de /login */}
                 {showLogout && (
                     <Button color="inherit" onClick={handleLogout}>
                         Cerrar sesión

@@ -65,3 +65,8 @@ export async function obtenerColaIngresosService() {
 
   return res.json();
 }
+import { apiGet, apiPost } from "./apiService"; // o como lo tengas exportado
+
+export async function obtenerIngresoDetalleService(idIngreso) {
+  return apiGet(`/api/ingresos/${idIngreso}`);
+}

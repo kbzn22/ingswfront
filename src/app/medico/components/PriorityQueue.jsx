@@ -43,7 +43,7 @@ export function PriorityQueue({ cola, onAtender, loading }) {
                             .join(' ');
                         const cuil = item.cuilPaciente ?? item.cuil ?? '-';
                         const nivel = item.nivel ?? item.prioridad ?? '-';
-                        const estado = item.estado ?? item.estadoIngreso ?? 'PENDIENTE';
+                        const estado = item.nombreNivel;
                         const fecha =
                             item.fechaIngreso ?? item.fecha ?? '';
 

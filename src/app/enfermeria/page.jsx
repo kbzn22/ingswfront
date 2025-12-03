@@ -5,23 +5,28 @@ import BuscarPaciente from "@/components/inputs/BuscarPaciente";
 import FormPaciente from "@/components/inputs/FormPaciente";
 import FormIngreso from "@/components/inputs/FormIngreso";
 import ColaIngresos from "@/components/ColaIngreso";
+import DetalleIngresoModal from "@/components/DetalleIngreso";
 
 import { crearIngresoDTO } from "@/models/IngresoDTO";
 import { NIVEL_BY_VALUE } from "@/lib/enums";
 import { useRouter } from "next/navigation";
 
 import { buscarPacientePorCuil, registrarPacienteService } from "@/services/pacienteService";
-import { registrarIngresoService, cargarObrasSocialesService, obtenerColaIngresoService} from "@/services/ingresoService";
+import { registrarIngresoService, cargarObrasSocialesService,obtenerIngresoDetalleService} from "@/services/ingresoService";
 import { verificarSesionService } from "@/services/authService";
 import { limpiarCuil, formatearCuil11 } from "@/lib/cuil";
+import {fetchCola} from "@/services/colaService";
 
 export default function Page() {
+
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [cuil, setCuil] = useState("");
   const [paciente, setPaciente] = useState(null);
   const [mostrarFormPaciente, setMostrarFormPaciente] = useState(false);
   const [ingresos, setIngresos] = useState([]); // por ahora no lo tocamos
+  const [ingresoSeleccionado, setIngresoSeleccionado] = useState(null);
+  const [detalleAbierto, setDetalleAbierto] = useState(false);
   const [obrasSociales, setObrasSociales] = useState([]);
   const [formPaciente, setFormPaciente] = useState({
     cuil: "",
@@ -58,7 +63,7 @@ export default function Page() {
   useEffect(() => {
   async function cargarCola() {
     try {
-      const cola = await obtenerColaIngresosService();
+      const cola = await fetchCola();
       setIngresos(cola);
     } catch (e) {
       console.error("Error cargando cola de ingresos:", e);
@@ -68,7 +73,26 @@ export default function Page() {
   cargarCola();
 }, []);
 
+  async function handleSelectIngreso(itemCola) {
+    try {
+      setError("");
 
+      // trae detalle desde el back:
+      const detalle = await obtenerIngresoDetalleService(itemCola.idIngreso);
+
+      setIngresoSeleccionado(detalle);
+      setDetalleAbierto(true);
+    } catch (e) {
+      console.error("Error obteniendo detalle del ingreso:", e);
+      setError(e.message || "No se pudo obtener el detalle del ingreso.");
+    }
+  }
+
+  function cerrarModalDetalle() {
+    setDetalleAbierto(false);
+    // si querés limpiar:
+    // setIngresoSeleccionado(null);
+  }
   function handleCuilChange(e) {
     let v = limpiarCuil(e.target.value);
 
@@ -156,7 +180,7 @@ export default function Page() {
       });
 
       await registrarIngresoService(ingresoDTO);
-      const nuevaCola = await obtenerColaIngresosService(); 
+      const nuevaCola = await fetchCola();
       setIngresos(nuevaCola);
       resetForm();
     } catch (error) {
@@ -177,7 +201,8 @@ export default function Page() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col md:flex-row gap-6">
+      <>
+    <main className="min-h-screen flex flex-col md:flex-row bg-white">
       {/* IZQUIERDA */}
       <section className="basis-1/2 bg-white rounded-lg shadow-sm p-4 space-y-4">
         <h2 className="text-xl font-semibold">Registrar Nuevo Ingreso</h2>
@@ -233,10 +258,17 @@ export default function Page() {
       <section className="basis-1/2 bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col">
         <h2 className="text-xl font-semibold mb-2">Cola de ingresos</h2>
         <div className="flex-1 flex items-start">
-          <ColaIngresos ingresos={ingresos} />
+          <ColaIngresos ingresos={ingresos} onSelect={handleSelectIngreso} />
         </div>
       </section>
+
     </main>
+        <DetalleIngresoModal
+            open={detalleAbierto}
+            ingreso={ingresoSeleccionado}
+            onClose={cerrarModalDetalle}
+        />
+      </>
   );
 
 }

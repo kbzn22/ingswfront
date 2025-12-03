@@ -9,9 +9,12 @@ import {
     fetchResumen,
     fetchCola,
     fetchPacienteEnAtencion,
+} from '@/services/colaService';
+
+import {
     iniciarAtencion,
     finalizarAtencion,
-} from './medicoApi';
+} from '@/services/atencionService';
 
 export default function MedicoPage() {
     const [stats, setStats] = useState(null);           // {pendientes, enAtencion, finalizados}

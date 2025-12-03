@@ -1,31 +1,42 @@
 "use client";
 
-import { Card, CardContent, Typography, Divider } from "@mui/material";
+import { Card, CardContent, Typography } from "@mui/material";
 
-export default function ColaIngreso({ ingresos }) {
-  if (!ingresos || ingresos.length === 0) {
-    return <p className="text-gray-500">No hay ingresos pendientes.</p>;
-  }
+export default function ColaIngresos({ ingresos, onSelect }) {
+    return (
+        <div className="w-full space-y-3 overflow-y-auto max-h-[80vh] pr-2">
+            {ingresos.map((ing) => (
+                <Card
+                    key={ing.idIngreso}
+                    variant="outlined"
+                    sx={{
+                        bgcolor: "#fff",
+                        cursor: "pointer",
+                        transition: "background-color 0.15s ease",
+                        "&:hover": { backgroundColor: "#f8fafc" },
+                    }}
+                    onClick={() => onSelect && onSelect(ing)}
+                >
+                    <CardContent>
+                        <Typography variant="subtitle1" fontWeight={600}>
+                            {ing.nombre || ing.nombrePaciente || "Paciente sin nombre"}
+                        </Typography>
+                        {ing.apellido || ing.apellidoPaciente ? (
+                            <Typography variant="subtitle1" fontWeight={600}>
+                                {ing.apellido || ing.apellidoPaciente}
+                            </Typography>
+                        ) : null}
 
-  return (
-    <div className="space-y-3 overflow-y-auto max-h-[80vh] pr-2">
-      {ingresos.map((ing) => (
-        <Card key={ing.id} variant="outlined" sx={{ bgcolor: "#fff" }}>
-          <CardContent>
-            <Typography variant="subtitle1" fontWeight={600}>
-              {ing.paciente?.nombre} {ing.paciente?.apellido}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Nivel: {ing.nivelEmergencia}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Estado: {ing.estado}
-            </Typography>
-            <Divider sx={{ my: 1 }} />
-            <Typography variant="body2">{ing.informe}</Typography>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
+                        <Typography variant="body2">
+                            Nivel: {ing.nivel}{" "}
+                            {ing.nombreNivel ? `· ${ing.nombreNivel}` : ""}
+                        </Typography>
+                        <Typography variant="body2">
+                            Estado: {ing.estado || "PENDIENTE"}
+                        </Typography>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
 }

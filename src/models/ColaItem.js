@@ -1,10 +1,12 @@
-export function mapColaItem(raw) {
+export function mapColaItem(dto) {
   return {
-    idIngreso: raw.idIngreso,
-    nombrePaciente: raw.nombrePaciente,
-    apellidoPaciente: raw.apellidoPaciente,
-    cuilPaciente: raw.cuilPaciente,
-    nivel: raw.nivel,
-    fechaIngreso: raw.fechaIngreso ? new Date(raw.fechaIngreso) : null,
+    idIngreso: dto.ingresoId,
+    nombre: dto.nombre,
+    apellido: dto.apellido,
+    cuil: dto.cuil,
+    nivel: dto.nivel,
+    estado: dto.estado,
+    nombreNivel: dto.nombreNivel,
+    fechaIngreso: dto.fechaIngreso,
   };
 }

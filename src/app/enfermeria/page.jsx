@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import BuscarPaciente from "@/components/inputs/BuscarPaciente";
 import FormPaciente from "@/components/inputs/FormPaciente";
 import FormIngreso from "@/components/inputs/FormIngreso";
@@ -8,22 +8,28 @@ import ColaIngresos from "@/components/ColaIngreso";
 import DetalleIngresoModal from "@/components/DetalleIngreso";
 
 import { crearIngresoDTO } from "@/models/IngresoDTO";
-import { useRouter } from "next/navigation";
 
-import { buscarPacientePorCuil, registrarPacienteService } from "@/services/pacienteService";
-import { registrarIngresoService, cargarObrasSocialesService,obtenerIngresoDetalleService} from "@/services/ingresoService";
-import { verificarSesionService } from "@/services/authService";
+import {
+  buscarPacientePorCuil,
+  registrarPacienteService,
+} from "@/services/pacienteService";
+import {
+  registrarIngresoService,
+  cargarObrasSocialesService,
+  obtenerIngresoDetalleService,
+} from "@/services/ingresoService";
 import { limpiarCuil, formatearCuil11 } from "@/lib/cuil";
-import {fetchCola} from "@/services/colaService";
+import { fetchCola } from "@/services/colaService";
+import { useRoleGuard } from "@/hooks/useRoleGuard";
 
 export default function Page() {
+  // 🔐 Solo ENFERMERA puede estar acá
+  const { usuario, checking } = useRoleGuard(["ENFERMERA"]);
 
-  const router = useRouter();
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const [cuil, setCuil] = useState("");
   const [paciente, setPaciente] = useState(null);
   const [mostrarFormPaciente, setMostrarFormPaciente] = useState(false);
-  const [ingresos, setIngresos] = useState([]); // por ahora no lo tocamos
+  const [ingresos, setIngresos] = useState([]);
   const [ingresoSeleccionado, setIngresoSeleccionado] = useState(null);
   const [detalleAbierto, setDetalleAbierto] = useState(false);
   const [obrasSociales, setObrasSociales] = useState([]);
@@ -42,41 +48,26 @@ export default function Page() {
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
 
+  // 🔁 Cargar cola una vez que ya sabemos que el rol es válido
   useEffect(() => {
-    async function verificar() {
+    if (checking) return;
+
+    async function cargarCola() {
       try {
-        const ok = await verificarSesionService();
-        if (!ok) {
-          router.push("/login");
-          return;
-        }
-        setCheckingAuth(false);
-      } catch {
-        router.push("/login");
+        const cola = await fetchCola();
+        setIngresos(cola);
+      } catch (e) {
+        console.error("Error cargando cola de ingresos:", e);
       }
     }
 
-    verificar();
-  }, [router]);
-
-  useEffect(() => {
-  async function cargarCola() {
-    try {
-      const cola = await fetchCola();
-      setIngresos(cola);
-    } catch (e) {
-      console.error("Error cargando cola de ingresos:", e);
-    }
-  }
-
     cargarCola();
-  }, []);
+  }, [checking]);
 
   async function handleSelectIngreso(itemCola) {
     try {
       setError("");
 
-      // trae detalle desde el back:
       const detalle = await obtenerIngresoDetalleService(itemCola.idIngreso);
 
       setIngresoSeleccionado(detalle);
@@ -89,9 +80,8 @@ export default function Page() {
 
   function cerrarModalDetalle() {
     setDetalleAbierto(false);
-    // si querés limpiar:
-    // setIngresoSeleccionado(null);
   }
+
   function handleCuilChange(e) {
     let v = limpiarCuil(e.target.value);
 
@@ -143,7 +133,7 @@ export default function Page() {
 
       setMostrarFormPaciente(true);
       setMensaje(
-        "Paciente no encontrado. Ingrese los datos para registrarlo."
+          "Paciente no encontrado. Ingrese los datos para registrarlo."
       );
     } catch (e) {
       setError(e.message);
@@ -179,6 +169,7 @@ export default function Page() {
       });
 
       await registrarIngresoService(ingresoDTO);
+
       const nuevaCola = await fetchCola();
       setIngresos(nuevaCola);
 
@@ -186,8 +177,8 @@ export default function Page() {
       cancelarIngreso();
       setMensaje("Ingreso registrado correctamente.");
       setError("");
-    } catch (error) {
-      setError(error.message);
+    } catch (e) {
+      setError(e.message);
     }
   }
 
@@ -195,77 +186,80 @@ export default function Page() {
     setPaciente(null);
   }
 
-  if (checkingAuth) {
+  // Mientras valida rol/sesión
+  if (checking) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <p>Verificando sesión...</p>
-      </main>
+        <main className="min-h-screen flex items-center justify-center">
+          <p>Verificando permisos...</p>
+        </main>
     );
   }
 
   return (
       <>
-    <main className="min-h-screen flex flex-col md:flex-row bg-white">
-      {/* IZQUIERDA */}
-      <section className="basis-1/2 bg-white rounded-lg shadow-sm p-4 space-y-4">
-        <h2 className="text-xl font-semibold">Registrar nuevo Ingreso</h2>
+        <main className="min-h-screen flex flex-col md:flex-row bg-white">
+          {/* IZQUIERDA */}
+          <section className="basis-1/2 bg-white rounded-lg shadow-sm p-4 space-y-4">
+            <h2 className="text-xl font-semibold">Registrar nuevo Ingreso</h2>
 
-        {/* 1. BUSCAR PACIENTE */}
-        <BuscarPaciente
-          cuil={cuil}
-          onCuilChange={handleCuilChange}
-          onBuscar={buscarPaciente}
-        />
+            {/* 1. BUSCAR PACIENTE */}
+            <BuscarPaciente
+                cuil={cuil}
+                onCuilChange={handleCuilChange}
+                onBuscar={buscarPaciente}
+            />
 
-        {/* 2. FORM PACIENTE (si no existe) */}
-        {mostrarFormPaciente && (
-          <FormPaciente
-            formPaciente={formPaciente}
-            setFormPaciente={setFormPaciente}
-            obrasSociales={obrasSociales}
-            onSubmit={registrarPaciente}
-            onCancel={() => {
-              setMostrarFormPaciente(false);
-              setFormPaciente({
-                cuil: "",
-                nombre: "",
-                apellido: "",
-                email: "",
-                calle: "",
-                numero: "",
-                localidad: "",
-                codigo: "",
-                numeroAfiliado: "",
-              });
-              setError("");
-              setMensaje("");
-            }}
-          />
-        )}
+            {/* 2. FORM PACIENTE (si no existe) */}
+            {mostrarFormPaciente && (
+                <FormPaciente
+                    formPaciente={formPaciente}
+                    setFormPaciente={setFormPaciente}
+                    obrasSociales={obrasSociales}
+                    onSubmit={registrarPaciente}
+                    onCancel={() => {
+                      setMostrarFormPaciente(false);
+                      setFormPaciente({
+                        cuil: "",
+                        nombre: "",
+                        apellido: "",
+                        email: "",
+                        calle: "",
+                        numero: "",
+                        localidad: "",
+                        codigo: "",
+                        numeroAfiliado: "",
+                      });
+                      setError("");
+                      setMensaje("");
+                    }}
+                />
+            )}
 
-        {/* 3. FORM INGRESO (si existe paciente) */}
-        {paciente && (
-          <FormIngreso
-            paciente={paciente}
-            onCreate={handleCreateIngreso}
-            onCancel={cancelarIngreso}
-          />
-        )}
+            {/* 3. FORM INGRESO (si existe paciente) */}
+            {paciente && (
+                <FormIngreso
+                    paciente={paciente}
+                    onCreate={handleCreateIngreso}
+                    onCancel={cancelarIngreso}
+                />
+            )}
 
-        {/* 4. ERRORES Y MENSAJES */}
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-        {mensaje && <p className="text-green-600 text-sm">{mensaje}</p>}
-      </section>
+            {/* 4. ERRORES Y MENSAJES */}
+            {error && <p className="text-red-600 text-sm">{error}</p>}
+            {mensaje && <p className="text-green-600 text-sm">{mensaje}</p>}
+          </section>
 
-      {/* DERECHA */}
-      <section className="basis-1/2 bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col">
-        <h2 className="text-xl font-semibold mb-2">Cola de Ingresos pendientes de Atencion</h2>
-        <div className="flex-1 flex items-start">
-          <ColaIngresos ingresos={ingresos} onSelect={handleSelectIngreso} />
-        </div>
-      </section>
+          {/* DERECHA */}
+          <section className="basis-1/2 bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col">
+            <h2 className="text-xl font-semibold mb-2">
+              Cola de Ingresos pendientes de Atención
+            </h2>
+            <div className="flex-1 flex items-start">
+              <ColaIngresos ingresos={ingresos} onSelect={handleSelectIngreso} />
+            </div>
+          </section>
+        </main>
 
-    </main>
         <DetalleIngresoModal
             open={detalleAbierto}
             ingreso={ingresoSeleccionado}
@@ -273,5 +267,4 @@ export default function Page() {
         />
       </>
   );
-
 }

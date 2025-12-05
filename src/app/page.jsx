@@ -12,6 +12,7 @@ export default function HomeRedirect() {
         async function go() {
             try {
                 const me = await obtenerUsuarioActualService();
+
                 if (me?.rol === "DOCTOR") {
                     router.replace("/medico");
                 } else if (me?.rol === "ENFERMERA") {

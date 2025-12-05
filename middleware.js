@@ -34,7 +34,7 @@ export async function middleware(request) {
             },
             cache: "no-store",
         });
-
+        console.log(res);
         if (!res.ok) {
             const loginUrl = new URL("/login", request.url);
             return NextResponse.redirect(loginUrl);

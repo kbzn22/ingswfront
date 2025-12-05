@@ -22,22 +22,30 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            const res = await fetch(AUTH_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ username, password }),
-            });
 
-            if (!res.ok) {
-                setError("Usuario o contraseña incorrectos.");
-                setLoading(false);
-                return;
+            await loginService(username, password);
+
+
+            const usuario = await obtenerUsuarioActualService();
+
+            if (!usuario || !usuario.rol) {
+                throw new Error("No se pudo determinar el rol del usuario.");
             }
 
-            router.push("/enfermeria");
+
+            if (usuario.rol === "DOCTOR") {
+                router.push("/medico");
+            } else if (usuario.rol === "ENFERMERA") {
+                router.push("/enfermeria");
+            } else {
+                // rol desconocido → home o error
+                router.push("/");
+            }
+
         } catch (err) {
-            setError("No se pudo conectar con el servidor.");
+            console.error(err);
+            setError("Usuario o contraseña incorrectos.");
+        } finally {
             setLoading(false);
         }
     }

@@ -44,8 +44,12 @@ export function PriorityQueue({ cola, onAtender, loading }) {
                         const cuil = item.cuilPaciente ?? item.cuil ?? '-';
                         const nivel = item.nivel ?? item.prioridad ?? '-';
                         const estado = item.nombreNivel;
-                        const fecha =
-                            item.fechaIngreso ?? item.fecha ?? '';
+                        const fecha = item.fechaIngreso
+                            ? new Date(item.fechaIngreso).toLocaleString("es-AR", {
+                                dateStyle: "short",
+                                timeStyle: "short",
+                            })
+                            : "-";
 
                         return (
                             <tr key={item.idIngreso ?? item.id}>

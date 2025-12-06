@@ -1,0 +1,45 @@
+import { NIVEL_EMERGENCIA } from "@/lib/enums";
+
+export function numeroPorNivel(nombre) {
+  const item = NIVEL_EMERGENCIA.find(n => n.value === nombre);
+  return item?.numero ?? null;
+}
+
+export function mapIngresoDetalle(ingreso) {
+  if (!ingreso) return null;
+
+  const pac = ingreso.paciente ?? {};
+  const afi = pac.afiliado ?? {};
+  const obra = afi.obraSocial ?? {};
+  const enf = ingreso.enfermera ?? {};
+  const ta = ingreso.tensionArterial ?? {};
+
+  return {
+    idIngreso: ingreso.id,
+
+    // Paciente
+    cuilPaciente: pac.cuil ?? "-",
+    nombrePaciente: pac.nombre ?? "-",
+    apellidoPaciente: pac.apellido ?? "-",
+    obraSocial: obra?.nombre ?? "-",
+    numeroAfiliado: afi.numeroAfiliado ?? null,
+
+    // Enfermera
+    cuilEnfermera: enf.cuil ?? "-",
+    nombreEnfermera: enf.nombre ?? "-",
+    apellidoEnfermera: enf.apellido ?? "-",
+
+    nivel: numeroPorNivel(ingreso.nivelEmergencia),   
+    nombreNivel: ingreso.nivelEmergencia,             
+    estado: ingreso.estadoIngreso,
+    fechaIngreso: ingreso.fechaIngreso,
+
+    temperatura: ingreso.temperatura?.temperatura ?? null,
+    frecuenciaCardiaca: ingreso.frecuenciaCardiaca?.valor ?? null,
+    frecuenciaRespiratoria: ingreso.frecuenciaRespiratoria?.valor ?? null,
+    sistolica: ta.sistolica?.valor ?? null,
+    diastolica: ta.diastolica?.valor ?? null,
+
+    informe: ingreso.descripcion ?? "",
+  };
+}

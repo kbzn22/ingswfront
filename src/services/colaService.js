@@ -1,12 +1,8 @@
-// app/services/colaService.js
-
 import { apiGet } from "./apiService";
 import { mapColaItem } from "@/models/ColaItem";
 
-/**
- * GET /api/ingresos/cola
- */
-export async function fetchCola() {
+
+export async function obtenerColaIngresos() {
   const data = await apiGet("/api/ingresos/cola");
   console.log("DATA COLA:", data);
   if (!data) return [];

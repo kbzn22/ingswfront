@@ -1,6 +1,6 @@
-// src/services/ingresosService.js
-
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+import { apiGet, apiPost } from "./apiService";
+import { mapIngresoDetalle } from "@/models/Ingreso";
 
 /**
  * Registra un ingreso en el backend.
@@ -53,24 +53,8 @@ export async function cargarObrasSocialesService() {
   return res.json();
 }
 
-export async function obtenerColaIngresosService() {
-  const res = await fetch(`${BASE_URL}/ingresos/cola`, {
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || "Error al obtener la cola de ingresos.");
-  }
-
-  return res.json();
-}
-import { apiGet, apiPost } from "./apiService"; // o como lo tengas exportado
-
-export async function obtenerIngresoDetalleService(idIngreso) {
-  return apiGet(`/api/medico/${idIngreso}`);
-}
 export async function buscarIngresoPorId(id) {
-
-  return apiGet(`/api/ingresos/${id}/detalle`);
+  const data = await apiGet(`/api/ingresos/${id}/detalle`); // 👈 OJO: sin /detalle
+  if (!data) return null;
+  return mapIngresoDetalle(data);
 }

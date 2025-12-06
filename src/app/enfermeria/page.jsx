@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import BuscarPaciente from "@/components/inputs/BuscarPaciente";
 import FormPaciente from "@/components/inputs/FormPaciente";
 import FormIngreso from "@/components/inputs/FormIngreso";
-import ColaIngresos from "@/components/ColaIngreso";
-import DetalleIngresoModal from "@/components/DetalleIngreso";
+import ColaIngresos from "@/components/ColaIngresos";
+import DetalleIngreso from "@/components/DetalleIngreso";
 
 import { crearIngresoDTO } from "@/models/IngresoDTO";
 
@@ -16,10 +16,10 @@ import {
 import {
   registrarIngresoService,
   cargarObrasSocialesService,
-  obtenerIngresoDetalleService,
+  buscarIngresoPorId,
 } from "@/services/ingresoService";
 import { limpiarCuil, formatearCuil11 } from "@/lib/cuil";
-import { fetchCola } from "@/services/colaService";
+import { obtenerColaIngresos } from "@/services/colaService";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 
 export default function Page() {
@@ -54,7 +54,7 @@ export default function Page() {
 
     async function cargarCola() {
       try {
-        const cola = await fetchCola();
+        const cola = await obtenerColaIngresos();
         setIngresos(cola);
       } catch (e) {
         console.error("Error cargando cola de ingresos:", e);
@@ -68,7 +68,7 @@ export default function Page() {
     try {
       setError("");
 
-      const detalle = await obtenerIngresoDetalleService(itemCola.idIngreso);
+      const detalle = await buscarIngresoPorId(itemCola.idIngreso);
 
       setIngresoSeleccionado(detalle);
       setDetalleAbierto(true);
@@ -170,7 +170,7 @@ export default function Page() {
 
       await registrarIngresoService(ingresoDTO);
 
-      const nuevaCola = await fetchCola();
+      const nuevaCola = await obtenerColaIngresos();
       setIngresos(nuevaCola);
 
       resetForm();
@@ -260,7 +260,7 @@ export default function Page() {
           </section>
         </main>
 
-        <DetalleIngresoModal
+        <DetalleIngreso
             open={detalleAbierto}
             ingreso={ingresoSeleccionado}
             onClose={cerrarModalDetalle}

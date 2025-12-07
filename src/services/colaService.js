@@ -9,11 +9,7 @@ export async function obtenerColaIngresos() {
   return data.map(mapColaItem);
 }
 
-/**
- * GET /api/ingresos/resumen
- * { pendientes, enAtencion, finalizados }
- */
-export async function fetchResumen() {
+export async function obtenerResumen() {
   return apiGet("/api/ingresos/resumen");
 }
 

@@ -1,4 +1,3 @@
-// app/medico/page.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,15 +5,15 @@ import { StatsRow } from "./components/StatsRow";
 import { CurrentPatientCard } from "./components/CurrentPatientCard";
 import { PriorityQueue } from "./components/PriorityQueue";
 import {
-    fetchResumen,
-    fetchCola,
+    obtenerColaIngresos,
+    obtenerResumen,
     fetchPacienteEnAtencion,
 } from "@/services/colaService";
 import {
     iniciarAtencion,
     finalizarAtencion,
 } from "@/services/atencionService";
-import { obtenerIngresoDetalleService } from "@/services/ingresoService";
+import { buscarIngresoPorId } from "@/services/ingresoService";
 
 export default function MedicoPage() {
     const [stats, setStats] = useState(null);
@@ -32,8 +31,8 @@ export default function MedicoPage() {
             setError(null);
 
             const [resumen, colaResp, pacienteActual] = await Promise.all([
-                fetchResumen(),
-                fetchCola(),
+                obtenerResumen(),
+                obtenerColaIngresos(),
                 fetchPacienteEnAtencion(),
             ]);
 
@@ -41,11 +40,10 @@ export default function MedicoPage() {
             setCola(colaResp ?? []);
             setPaciente(pacienteActual ?? null);
 
-            // 👉 si hay paciente en atención, traigo el detalle completo
             if (pacienteActual) {
                 const ingresoId = pacienteActual.idIngreso ?? pacienteActual.id;
                 if (ingresoId) {
-                    const det = await obtenerIngresoDetalleService(ingresoId);
+                    const det = await buscarIngresoPorId(ingresoId);
                     setDetalle(det);
                 } else {
                     setDetalle(null);

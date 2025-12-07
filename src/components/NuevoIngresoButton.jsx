@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined';
-import IngresoForm from '@/components/inputs/FormIngreso';
+import IngresoForm from '@/app/enfermeria/components/FormIngreso';
 
 export default function NuevoIngresoButton({ onCreate }) {
   const [open, setOpen] = useState(false);

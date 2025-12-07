@@ -26,8 +26,9 @@ export function CurrentPatientCard({
     const d = detalle || {};
 
     const nombrePaciente =
-        d.nombrePaciente ??
-        ([paciente.nombre, paciente.apellido].filter(Boolean).join(" ") || "Paciente");
+  (d.nombrePaciente || d.apellidoPaciente)
+    ? [d.nombrePaciente, d.apellidoPaciente].filter(Boolean).join(" ")
+    : ([paciente.nombre, paciente.apellido].filter(Boolean).join(" ") || "Paciente");   
 
     const cuilPaciente = d.cuilPaciente ?? paciente.cuil ?? "-";
     const obraSocial = d.obraSocial ?? "-";

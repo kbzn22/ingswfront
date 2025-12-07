@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import BuscarPaciente from "@/components/inputs/BuscarPaciente";
-import FormPaciente from "@/components/inputs/FormPaciente";
-import FormIngreso from "@/components/inputs/FormIngreso";
+import BuscarPaciente from "./components/BuscarPaciente";
+import FormPaciente from "./components/FormPaciente";
+import FormIngreso from "./components/FormIngreso";
 import ColaIngresos from "@/components/ColaIngresos";
 import DetalleIngreso from "@/components/DetalleIngreso";
 
@@ -48,7 +48,6 @@ export default function Page() {
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
 
-  // 🔁 Cargar cola una vez que ya sabemos que el rol es válido
   useEffect(() => {
     if (checking) return;
 

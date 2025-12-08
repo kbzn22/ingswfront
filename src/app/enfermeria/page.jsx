@@ -249,7 +249,7 @@ export default function Page() {
           </section>
 
           {/* DERECHA */}
-          <section className="basis-1/2 bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col">
+          <section className="flex-1 bg-white rounded-2xl shadow-sm p-4 flex flex-col">
             <h2 className="text-xl font-semibold mb-2">
               Cola de Ingresos pendientes de Atención
             </h2>

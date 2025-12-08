@@ -14,12 +14,3 @@ export async function logoutService() {
   return apiPost("/auth/logout");
 }
 
-
-export async function verificarSesionService() {
-  try {
-    const data = await apiGet("/auth/me");
-    return !!data && !!data.username;
-  } catch {
-    return false;
-  }
-}

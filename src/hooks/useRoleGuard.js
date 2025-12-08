@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -19,30 +18,35 @@ export function useRoleGuard(allowedRoles) {
 
                 if (cancelled) return;
 
-                // si no hay usuario → al login
+
                 if (!data) {
-                    router.push("/login");
+                    router.replace("/login");
                     return;
                 }
 
-                setUsuario(data);
 
-                // si el rol NO está permitido en esta pantalla
-                if (!allowedRoles.includes(data.rol)) {
-                    if (data.rol === "DOCTOR") {
-                        router.push("/medico");
-                    } else if (data.rol === "ENFERMERA") {
-                        router.push("/enfermeria");
-                    } else {
-                        router.push("/login");
+                if (Array.isArray(allowedRoles) && allowedRoles.length > 0) {
+                    if (!allowedRoles.includes(data.rol)) {
+                        // 🚫 Rol no permitido en esta pantalla
+                        if (data.rol === "DOCTOR") {
+                            router.replace("/medico");
+                        } else if (data.rol === "ENFERMERA") {
+                            router.replace("/enfermeria");
+                        } else {
+                            router.replace("/login");
+                        }
+                        return; // 👈 CLAVE: cortamos acá, no marcamos autorizado en esta página
                     }
                 }
+
+
+                setUsuario(data);
+                setChecking(false);
             } catch (e) {
                 if (!cancelled) {
-                    router.push("/login");
+                    console.error("Error en useRoleGuard:", e);
+                    router.replace("/login");
                 }
-            } finally {
-                if (!cancelled) setChecking(false);
             }
         }
 
@@ -51,7 +55,7 @@ export function useRoleGuard(allowedRoles) {
         return () => {
             cancelled = true;
         };
-    }, [router]); // allowedRoles es constante por página
+    }, [router, JSON.stringify(allowedRoles)]);
 
     return { usuario, checking };
 }

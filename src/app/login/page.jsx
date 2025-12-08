@@ -7,7 +7,20 @@ import {
     obtenerUsuarioActualService,
 } from "@/services/authService";
 
-const AUTH_URL = "http://localhost:8080/auth/login";
+import {
+    Box,
+    Card,
+    CardContent,
+    TextField,
+    Button,
+    Typography,
+    CircularProgress,
+    Alert,
+    InputAdornment,
+} from "@mui/material";
+
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LockIcon from "@mui/icons-material/Lock";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -22,28 +35,15 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-
             await loginService(username, password);
-
-
             const usuario = await obtenerUsuarioActualService();
 
-            if (!usuario || !usuario.rol) {
-                throw new Error("No se pudo determinar el rol del usuario.");
-            }
+            if (!usuario?.rol) throw new Error();
 
-
-            if (usuario.rol === "DOCTOR") {
-                router.push("/medico");
-            } else if (usuario.rol === "ENFERMERA") {
-                router.push("/enfermeria");
-            } else {
-                // rol desconocido → home o error
-                router.push("/");
-            }
-
+            if (usuario.rol === "DOCTOR") router.push("/medico");
+            else if (usuario.rol === "ENFERMERA") router.push("/enfermeria");
+            else router.push("/");
         } catch (err) {
-            console.error(err);
             setError("Usuario o contraseña incorrectos.");
         } finally {
             setLoading(false);
@@ -51,39 +51,81 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-slate-100">
-            <form
-                onSubmit={handleSubmit}
-                className="bg-white p-6 rounded shadow flex flex-col gap-3 w-full max-w-sm"
+        <Box
+            sx={{
+                minHeight: "100vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#f1f5f9",
+                padding: 2,
+            }}
+        >
+            <Card
+                sx={{
+                    width: "100%",
+                    maxWidth: 400,
+                    borderRadius: 3,
+                    boxShadow: 5,
+                }}
             >
-                <h1 className="text-xl font-semibold text-center">Iniciar sesión</h1>
+                <CardContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <Typography variant="h5" fontWeight={600} align="center">
+                        Iniciar sesión
+                    </Typography>
 
-                <input
-                    type="text"
-                    placeholder="Usuario"
-                    className="border rounded px-2 py-1"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                />
+                    {error && <Alert severity="error">{error}</Alert>}
 
-                <input
-                    type="password"
-                    placeholder="Contraseña"
-                    className="border rounded px-2 py-1"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                    <form
+                        onSubmit={handleSubmit}
+                        style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+                    >
+                        <TextField
+                            label="Usuario"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            fullWidth
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <AccountCircleIcon />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
 
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                        <TextField
+                            label="Contraseña"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            fullWidth
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <LockIcon />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-blue-600 text-white rounded py-2 hover:bg-blue-700 disabled:opacity-60"
-                >
-                    {loading ? "Ingresando..." : "Ingresar"}
-                </button>
-            </form>
-        </main>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            fullWidth
+                            disabled={loading}
+                            sx={{
+                                paddingY: 1.2,
+                                borderRadius: 2,
+                                fontWeight: 600,
+                                textTransform: "none",
+                            }}
+                        >
+                            {loading ? <CircularProgress size={24} color="inherit" /> : "Ingresar"}
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
+        </Box>
     );
 }

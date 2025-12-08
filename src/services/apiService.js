@@ -25,8 +25,12 @@ async function apiGet(path) {
     }
 
     if (!res.ok) {
-        const message = data?.message || `Error GET ${path}: ${res.status}`;
-        throw new Error(message);
+        const message = data?.message || `Error POST ${path}: ${res.status}`;
+
+        const error = new Error(message);
+        error.status = res.status;
+        error.data = data;
+        throw error;
     }
 
     return data; // puede ser null si 204
@@ -45,16 +49,21 @@ async function apiPost(path, body) {
         try {
             data = await res.json();
         } catch {
-            // idem
+            // respuesta sin JSON, la dejamos en null
         }
     }
 
     if (!res.ok) {
         const message = data?.message || `Error POST ${path}: ${res.status}`;
-        throw new Error(message);
+
+        const error = new Error(message);
+        error.status = res.status;
+        error.data = data;
+        throw error;
     }
 
     return data; // null si 204
 }
+
 
 export { API_URL, apiGet, apiPost };

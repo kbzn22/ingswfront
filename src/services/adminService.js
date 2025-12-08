@@ -1,9 +1,10 @@
 // src/services/adminService.js
 import { API_URL, apiPost } from "@/services/apiService";
 
+
 // Registro de personal (ya lo venías usando)
 export async function registrarPersonalAdmin(payload) {
-    return apiPost("/admin/personal/register", payload);
+    return apiPost("/api/admin/personal/register", payload);
 }
 
 // Exportar ingresos a Excel
@@ -25,7 +26,6 @@ export async function exportIngresosLog({ desde, hasta, cuilPaciente, cuilEnferm
 
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
     a.download = `ingresos_${Date.now()}.xlsx`;
@@ -35,12 +35,13 @@ export async function exportIngresosLog({ desde, hasta, cuilPaciente, cuilEnferm
     window.URL.revokeObjectURL(url);
 }
 
-// Exportar atenciones a Excel
-export async function exportAtencionesLog({ desde, hasta, cuilDoctor }) {
+
+export async function exportAtencionesLog({ desde, hasta, cuilDoctor, cuilPaciente }) {
     const params = new URLSearchParams();
     if (desde) params.append("desde", desde);
     if (hasta) params.append("hasta", hasta);
-    if (cuilDoctor) params.append("cuilDoctor", cuilDoctor);
+    if (cuilDoctor) params.append("cuilDoctor", normalizeCuil(cuilDoctor));
+    if (cuilPaciente) params.append("cuilPaciente", normalizeCuil(cuilPaciente));
 
     const res = await fetch(`${API_URL}/admin/logs/atenciones/export?${params.toString()}`, {
         method: "GET",
@@ -53,7 +54,6 @@ export async function exportAtencionesLog({ desde, hasta, cuilDoctor }) {
 
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
     a.download = `atenciones_${Date.now()}.xlsx`;

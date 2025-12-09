@@ -5,7 +5,7 @@ import BuscarPaciente from "./components/BuscarPaciente";
 import FormPaciente from "./components/FormPaciente";
 import FormIngreso from "./components/FormIngreso";
 import ColaIngresos from "./components/ColaIngresos";
-import DetalleIngreso from "@/components/DetalleIngreso";
+import DetalleIngreso from "./components/DetalleIngreso";
 
 import { crearIngresoDTO } from "@/models/IngresoDTO";
 

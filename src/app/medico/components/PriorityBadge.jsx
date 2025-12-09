@@ -1,5 +1,3 @@
-// app/medico/components/PriorityBadge.jsx
-
 const NIVEL_LABEL = {
     1: 'Crítica',
     2: 'Emergencia',

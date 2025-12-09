@@ -1,13 +1,6 @@
-// app/medico/components/CurrentPatientCard.jsx
 "use client";
 
-const NIVEL_INFO = {
-    1: { nombre: "Crítica",        color: "#ef4444", bg: "#fee2e2", border: "#fecaca" },
-    2: { nombre: "Emergencia",     color: "#f97316", bg: "#ffedd5", border: "#fed7aa" },
-    3: { nombre: "Urgencia",       color: "#eab308", bg: "#fef9c3", border: "#fef08a" },
-    4: { nombre: "Urgencia menor", color: "#22c55e", bg: "#dcfce7", border: "#bbf7d0" },
-    5: { nombre: "Sin urgencia",   color: "#3b82f6", bg: "#dbeafe", border: "#bfdbfe" },
-};
+import { NIVEL_EMERGENCIA_INFO } from "@/lib/enums";
 
 export function CurrentPatientCard({
                                        paciente,
@@ -52,7 +45,7 @@ export function CurrentPatientCard({
     const nombreNivel = d.nombreNivel ?? "";
 
     const nivelNumero = Number(nivel);
-    const nivelInfo = NIVEL_INFO[nivelNumero] || null;
+    const nivelInfo = NIVEL_EMERGENCIA_INFO[nivelNumero] || null;
 
     const fechaIngreso =
         d.fechaIngreso || paciente.fechaIngreso
@@ -76,7 +69,7 @@ export function CurrentPatientCard({
                 : "Sin informe inicial registrado.";
 
     return (
-        <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-4">
+        <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-4 text-sm">
             {/* Título + estado/nivel */}
             <header className="flex items-start justify-between gap-2">
                 <div>
@@ -95,118 +88,125 @@ export function CurrentPatientCard({
                             color: "#0f172a",
                         }}
                     >
-            <span
-                style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "999px",
-                    backgroundColor: nivelInfo.color,
-                }}
-            />
-                        {`Nivel ${nivelNumero} · ${nivelInfo.nombre} · En curso`}
-          </span>
-                ) : (
+                    <span
+                        style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "999px",
+                            backgroundColor: nivelInfo.color,
+                        }}
+                    />
+                        {`Nivel ${nivelNumero} · ${nivelInfo.label} · En curso`}
+                    </span>
+                )  : (
                     <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-700 border border-emerald-100">
-            En curso
-          </span>
+                        En curso
+                    </span>
                 )}
             </header>
-
+          
             {/* PACIENTE */}
-            <div className="border-b border-slate-200 pb-2 space-y-1 text-sm">
-                <p className="font-semibold text-slate-800">Paciente</p>
-                <p>
+            <div className="border-b border-slate-200 pb-2 space-y-1">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Paciente
+                </p>
+                <p className="text-slate-800">
                     <span className="font-medium">Nombre:</span> {nombrePaciente}
                 </p>
-                <p>
+                <p className="text-slate-800">
                     <span className="font-medium">CUIL:</span> {cuilPaciente}
                 </p>
-                <p>
+                <p className="text-slate-800">
                     <span className="font-medium">Obra social:</span> {obraSocial}
                     {obraSocial !== "-" && numeroAfiliado !== "-" && <> ({numeroAfiliado})</>}
                 </p>
             </div>
-
-            {/* ENFERMERA + NIVEL/FECHA */}
-            <div className="border-b border-slate-200 pb-3 text-sm space-y-2">
+          
+            {/* ENFERMERA + FECHA */}
+            <div className="border-b border-slate-200 pb-3 space-y-2">
                 <div>
-                    <p className="font-semibold text-slate-800">Cargado por</p>
-                    <p>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                        Cargado por
+                    </p>
+                    <p className="text-slate-800">
                         <span className="font-medium">Enfermera:</span> {nombreEnfermera}
                     </p>
-                    <p>
+                    <p className="text-slate-800">
                         <span className="font-medium">CUIL:</span> {cuilEnfermera}
                     </p>
                 </div>
-
-                <div className="flex  gap-4 mt-2 text-sm">
-
-                    <div className="text-left">
-                        <p className="font-medium text-slate-700">Fecha ingreso</p>
-                        <p className="text-slate-800">{fechaIngreso}</p>
-                    </div>
+          
+              <div className="flex gap-4 mt-2">
+                <div className="text-left">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Fecha de ingreso
+                  </p>
+                  <p className="text-slate-800">{fechaIngreso}</p>
                 </div>
+              </div>
             </div>
-
+          
             {/* SIGNOS VITALES */}
-            <div className="border-b border-slate-200 pb-3 text-sm space-y-1">
-                <p className="font-semibold text-slate-800">Signos vitales</p>
-
-                <p>
-                    <span className="font-semibold">Temperatura:</span> {temperatura} °C
-                </p>
-
-                <p>
-                    <span className="font-semibold">Frec. cardíaca:</span> {fc} lpm
-                </p>
-
-                <p>
-                    <span className="font-semibold">Frec. respiratoria:</span> {fr} rpm
-                </p>
-
-                <p>
-                    <span className="font-semibold">Tensión arterial:</span>{" "}
-                    {sist !== "-" && diast !== "-" ? `${sist}/${diast} mmHg` : "-"}
-                </p>
+            <div className="border-b border-slate-200 pb-3 space-y-1">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Signos vitales
+              </p>
+          
+              <p className="text-slate-800">
+                <span className="font-semibold">Temperatura:</span> {temperatura} °C
+              </p>
+              <p className="text-slate-800">
+                <span className="font-semibold">Frec. cardíaca:</span> {fc} lpm
+              </p>
+              <p className="text-slate-800">
+                <span className="font-semibold">Frec. respiratoria:</span> {fr} rpm
+              </p>
+              <p className="text-slate-800">
+                <span className="font-semibold">Tensión arterial:</span>{" "}
+                {sist !== "-" && diast !== "-" ? `${sist}/${diast} mmHg` : "-"}
+              </p>
             </div>
-
+          
             {/* MOTIVO / INFORME INICIAL */}
-            <div className="space-y-1 text-sm">
-                <p className="font-semibold text-slate-800">Motivo / informe inicial</p>
+            <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Motivo / informe inicial
+                </p>
                 <p className="text-slate-700 whitespace-pre-wrap">{informeInicial}</p>
             </div>
-
+          
             {/* INFORME FINAL */}
             <div className="space-y-1">
-                <label className="block text-xs font-semibold text-slate-700">
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
                     Informe de atención (médico)
                 </label>
                 <textarea
                     className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
-                     min-h-[70px] max-h-[130px] resize-vertical"
+                    focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500
+                    min-h-[70px] max-h-[130px] resize-vertical"
                     placeholder="Escribí aquí el informe final de la atención…"
                     value={informe}
                     onChange={(e) => onInformeChange(e.target.value)}
                 />
                 {error && (
-                    <p className="text-xs text-red-600 mt-1">
+                    <p className="text-red-600 text-sm">
                         {error}
                     </p>
                 )}
             </div>
-
+          
             <div className="flex justify-end">
                 <button
                     onClick={onFinalizar}
                     disabled={loadingFinalizar}
                     className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium
-                     bg-emerald-600 text-white hover:bg-emerald-700
-                     disabled:opacity-60 disabled:cursor-not-allowed"
+                    bg-emerald-600 text-white hover:bg-emerald-700
+                    disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                    {loadingFinalizar ? "Finalizando…" : "Finalizar atención"}
+                {loadingFinalizar ? "Finalizando…" : "Finalizar atención"}
                 </button>
             </div>
         </section>
+
     );
 }

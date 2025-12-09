@@ -200,8 +200,10 @@ export default function Page() {
   }
 
   return (
-      <>
-        <main className="min-h-screen flex flex-col md:flex-row bg-white">
+    <>    
+      <main className="min-h-screen w-full bg-white">
+        <div className="w-full h-full flex flex-col md:flex-row gap-4 p-4">
+
           {/* IZQUIERDA */}
           <section className="basis-1/2 bg-white rounded-lg shadow-sm p-4 space-y-4">
             <h2 className="text-xl font-semibold">Registrar nuevo Ingreso</h2>
@@ -262,13 +264,14 @@ export default function Page() {
               <ColaIngresos ingresos={ingresos} onSelect={handleSelectIngreso} />
             </div>
           </section>
-        </main>
+        </div>
+      </main>
 
         <DetalleIngreso
             open={detalleAbierto}
             ingreso={ingresoSeleccionado}
             onClose={cerrarModalDetalle}
         />
-      </>
+    </>
   );
 }

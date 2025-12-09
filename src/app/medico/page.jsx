@@ -1,4 +1,3 @@
-// app/medico/page.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -125,9 +124,7 @@ export default function MedicoPage() {
         <main className="min-h-screen w-full bg-slate-50">
             <div className="w-full h-full flex flex-col md:flex-row gap-4 p-4">
 
-
-
-            {/* IZQUIERDA: resumen + paciente en atención */}
+            {/* IZQUIERDA */}
                 <section className="w-full md:w-1/2 h-full bg-white rounded-2xl shadow-sm p-4 space-y-4">
 
 
@@ -141,9 +138,7 @@ export default function MedicoPage() {
                     {/* Stats en la parte superior */}
                     <StatsRow stats={stats} loading={loading} />
 
-
-
-                    {/* Paciente actual en una card linda */}
+                    {/* Paciente actual */}
                     <CurrentPatientCard
                         paciente={paciente}
                         detalle={detalle}

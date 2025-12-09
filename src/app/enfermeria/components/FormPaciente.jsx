@@ -8,7 +8,7 @@ export default function FormPaciente({
   setFormPaciente,
   obrasSociales,
   onSubmit,
-  onCancel, // ✅ nuevo prop para cancelar
+  onCancel, 
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -16,7 +16,6 @@ export default function FormPaciente({
     setFormPaciente({ ...formPaciente, [field]: e.target.value });
   };
 
-  // ✅ limpiar correctamente los campos (no los borra del control)
   const handleClear = () => {
     setFormPaciente({
       cuil: "",

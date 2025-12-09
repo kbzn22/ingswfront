@@ -1,124 +1,192 @@
 "use client";
 
-const NIVEL_INFO = {
-    1: { nombre: "Crítica", color: "#ef4444", bg: "#fee2e2", border: "#fecaca" },
-    2: { nombre: "Emergencia", color: "#f97316", bg: "#ffedd5", border: "#fed7aa" },
-    3: { nombre: "Urgencia", color: "#eab308", bg: "#fef9c3", border: "#fef08a" },
-    4: { nombre: "Urgencia menor", color: "#22c55e", bg: "#dcfce7", border: "#bbf7d0" },
-    5: { nombre: "Sin urgencia", color: "#3b82f6", bg: "#dbeafe", border: "#bfdbfe" },
-};
+import {
+  Box,
+  Typography,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  TableContainer,
+  Paper,
+  Button,
+} from "@mui/material";
+import { NIVEL_EMERGENCIA_INFO } from "@/lib/enums";
 
 export function PriorityQueue({ cola, onAtender, loading }) {
-    return (
-        <section className="rounded-2xl border border-slate-200 bg-white px-4 py-3 space-y-3">
-            <div className="flex justify-between items-center">
-                <h2 className="text-sm font-semibold text-slate-900">
-                    Cola de espera por prioridad
-                </h2>
-                <span className="text-[11px] text-slate-500">
-                    {loading ? "Cargando..." : `${cola.length} pacientes en espera`}
-                </span>
-            </div>
+  return (
+    <Box
+      component="section"
+      sx={{
+        borderRadius: 2,
+        border: "1px solid #e2e8f0",
+        backgroundColor: "#ffffff",
+        p: 2,
+        display: "flex",
+        flexDirection: "column",
+        gap: 1.5,
+      }}
+    >
+      {/* HEADER */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Typography variant="subtitle1" fontWeight={600}>
+          Cola de espera por prioridad
+        </Typography>
+        <Typography variant="caption" sx={{ color: "#64748b" }}>
+          {loading ? "Cargando..." : `${cola.length} pacientes en espera`}
+        </Typography>
+      </Box>
 
-            <div className="border border-slate-100 rounded-xl overflow-hidden">
-                <table className="min-w-full text-xs whitespace-nowrap">
-                    <thead className="bg-slate-50 text-slate-500">
-                    <tr>
-                        <th className="px-3 py-2 text-left font-medium">Paciente</th>
-                        <th className="px-3 py-2 text-left font-medium">CUIL</th>
-                        <th className="px-3 py-2 text-left font-medium">Nivel</th>
-                        <th className="px-3 py-2 text-left font-medium">Ingreso</th>
-                        <th className="px-3 py-2 text-right font-medium">Acción</th>
-                    </tr>
-                    </thead>
+      {/* TABLA */}
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{
+          borderRadius: 2,
+          border: "1px solid #e5e7eb",
+          width: "100%",
+          overflowX: "auto",
+          maxHeight: "70vh"
+        }}
+      >
+        <Table 
+            size="small"
+            sx={{
+                "& th, & td": {
+                    fontSize: "0.75rem",
+                    whiteSpace: { xs: "normal", md: "nowrap" },
+                }
+            }}
+        >
+          <TableHead>
+            <TableRow
+              sx={{
+                backgroundColor: "#f8fafc",
+                "& th": {
+                  color: "#64748b",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  borderBottomColor: "#e5e7eb",
+                },
+              }}
+            >
+              <TableCell>Paciente</TableCell>
+              <TableCell>CUIL</TableCell>
+              <TableCell>Nivel</TableCell>
+              <TableCell>Ingreso</TableCell>
+              <TableCell align="right">Acción</TableCell>
+            </TableRow>
+          </TableHead>
 
-                    <tbody className="divide-y divide-slate-100">
-                    {cola.length === 0 && !loading && (
-                        <tr>
-                            <td
-                                colSpan={5}
-                                className="px-3 py-3 text-center text-slate-400 text-xs"
-                            >
-                                No hay pacientes en la cola.
-                            </td>
-                        </tr>
+          <TableBody>
+            {!loading && cola.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  align="center"
+                  sx={{
+                    fontSize: "0.75rem",
+                    color: "#9ca3af",
+                    py: 2,
+                  }}
+                >
+                  No hay pacientes en la cola.
+                </TableCell>
+              </TableRow>
+            )}
+
+            {cola.map((item, index) => {
+              const nombreBase =
+                (item.apellido || "") + ", " + (item.nombre || "");
+              const nombreMostrado = `${index + 1}. ${nombreBase}`;
+
+              const cuil = item.cuilPaciente ?? item.cuil ?? "-";
+
+              const nivelNumero = Number(item.nivel ?? item.prioridad);
+              const nivelInfo = NIVEL_EMERGENCIA_INFO[nivelNumero] || null;
+
+              const fecha = item.fechaIngreso
+                ? new Date(item.fechaIngreso).toLocaleString("es-AR", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  })
+                : "-";
+
+              return (
+                <TableRow
+                  key={item.idIngreso ?? item.id}
+                  sx={{
+                    "& td": { borderBottomColor: "#f1f5f9", fontSize: "0.85rem" },
+                  }}
+                >
+                  {/* PACIENTE */}
+                  <TableCell sx={{ color: "#0f172a" }}>
+                    {nombreMostrado}
+                  </TableCell>
+
+                  {/* CUIL */}
+                  <TableCell sx={{ color: "#4b5563" }}>
+                    {cuil !== "-" ? cuil : "-"}
+                  </TableCell>
+
+                  {/* NIVEL */}
+                  <TableCell>
+                    {nivelInfo ? (
+                      <span
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px]"
+                        style={{
+                          backgroundColor: nivelInfo.bg,
+                          borderColor: nivelInfo.border,
+                          color: "#0f172a",
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "999px",
+                            backgroundColor: nivelInfo.color,
+                          }}
+                        />
+                        {`Nivel ${nivelNumero} · ${nivelInfo.label}`}
+                      </span>
+                    ) : (
+                      <span className="text-slate-500 text-xs">-</span>
                     )}
+                  </TableCell>
 
-                    {cola.map((item, index) => {
-                        const nombre = [item.nombre, item.apellido]
-                            .filter(Boolean)
-                            .join(" ");
+                  {/* FECHA INGRESO */}
+                  <TableCell sx={{ color: "#6b7280" }}>{fecha}</TableCell>
 
-                        const cuil = item.cuilPaciente ?? item.cuil ?? "-";
-
-                        const nivelNumero = Number(item.nivel ?? item.prioridad);
-                        const nivelInfo = NIVEL_INFO[nivelNumero] || null;
-
-                        const fecha = item.fechaIngreso
-                            ? new Date(item.fechaIngreso).toLocaleString("es-AR", {
-                                dateStyle: "short",
-                                timeStyle: "short",
-                            })
-                            : "-";
-
-                        return (
-                            <tr key={item.idIngreso ?? item.id}>
-                                {/* PACIENTE */}
-                                <td className="px-3 py-2 text-slate-800">{nombre}</td>
-
-                                {/* CUIL */}
-                                <td className="px-3 py-2 text-slate-600">{cuil}</td>
-
-                                {/* NIVEL */}
-                                <td className="px-3 py-2">
-                                    {nivelInfo ? (
-                                        <div className="space-y-1">
-                                            {/* PILL DE NIVEL */}
-                                            <span
-                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px]"
-                                                style={{
-                                                    backgroundColor: nivelInfo.bg,
-                                                    borderColor: nivelInfo.border,
-                                                    color: "#0f172a",
-                                                }}
-                                            >
-                                                    <span
-                                                        style={{
-                                                            width: 8,
-                                                            height: 8,
-                                                            borderRadius: "999px",
-                                                            backgroundColor: nivelInfo.color,
-                                                        }}
-                                                    />
-                                                {`Nivel ${nivelNumero} · ${nivelInfo.nombre}`}
-                                                </span>
-
-
-                                        </div>
-                                    ) : (
-                                        <span className="text-slate-500">-</span>
-                                    )}
-                                </td>
-
-                                {/* FECHA INGRESO */}
-                                <td className="px-3 py-2 text-slate-500">{fecha}</td>
-
-                                {/* ACCIÓN */}
-                                <td className="px-3 py-2 text-right">
-                                    <button
-                                        onClick={() => onAtender(item)}
-                                        className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium
-                                                       bg-sky-600 text-white hover:bg-sky-700"
-                                    >
-                                        Atender
-                                    </button>
-                                </td>
-                            </tr>
-                        );
-                    })}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    );
+                  {/* ACCIÓN */}
+                  <TableCell align="right">
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => onAtender(item)}
+                      sx={{
+                        textTransform: "none",
+                        fontSize: "0.7rem",
+                        py: 0.4,
+                        px: 1.4,
+                      }}
+                    >
+                      Atender
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
 }

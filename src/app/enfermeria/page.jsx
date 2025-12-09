@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import BuscarPaciente from "./components/BuscarPaciente";
 import FormPaciente from "./components/FormPaciente";
 import FormIngreso from "./components/FormIngreso";
-import ColaIngresos from "@/components/ColaIngresos";
+import ColaIngresos from "./components/ColaIngresos";
 import DetalleIngreso from "@/components/DetalleIngreso";
 
 import { crearIngresoDTO } from "@/models/IngresoDTO";
@@ -80,6 +80,10 @@ export default function Page() {
   function cerrarModalDetalle() {
     setDetalleAbierto(false);
   }
+
+  useEffect(() => {
+    console.log("CUIL actual:", cuil);
+  }, [cuil]);
 
   function handleCuilChange(e) {
     let v = limpiarCuil(e.target.value);
@@ -176,6 +180,7 @@ export default function Page() {
       cancelarIngreso();
       setMensaje("Ingreso registrado correctamente.");
       setError("");
+      setCuil("");
     } catch (e) {
       setError(e.message);
     }

@@ -1,15 +1,7 @@
 "use client";
 
 import { Card, CardContent, Typography, Box } from "@mui/material";
-
-// Mapeo FRONT-ONLY basado en tu enum NivelEmergencia
-const NIVEL_INFO = {
-    1: { nombre: "Crítica", color: "#ef4444", bg: "#fee2e2", border: "#fecaca" },
-    2: { nombre: "Emergencia", color: "#f97316", bg: "#ffedd5", border: "#fed7aa" },
-    3: { nombre: "Urgencia", color: "#eab308", bg: "#fef9c3", border: "#fef08a" },
-    4: { nombre: "Urgencia menor", color: "#22c55e", bg: "#dcfce7", border: "#bbf7d0" },
-    5: { nombre: "Sin urgencia", color: "#3b82f6", bg: "#dbeafe", border: "#bfdbfe" },
-};
+import { NIVEL_EMERGENCIA_INFO } from "@/lib/enums";
 
 function formatElapsed(fechaIngresoStr) {
     if (!fechaIngresoStr) return "-";
@@ -35,7 +27,7 @@ export default function ColaIngresos({ ingresos, onSelect }) {
         <div className="w-full space-y-3 overflow-y-auto max-h-[80vh] pr-2">
             {ingresos.map((ing, index) => {
                 const nivelNumber = ing.nivel;
-                const info = NIVEL_INFO[nivelNumber] || null;
+                const info = NIVEL_EMERGENCIA_INFO[nivelNumber] || null;
                 const espera = formatElapsed(ing.fechaIngreso);
 
                 return (
@@ -90,16 +82,16 @@ export default function ColaIngresos({ ingresos, onSelect }) {
                                                 color: "#0f172a",
                                             }}
                                         >
-                      <span
-                          style={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: "999px",
-                              backgroundColor: info.color,
-                          }}
-                      />
-                                            {`Nivel ${nivelNumber} · ${info.nombre}`}
-                    </span>
+                                            <span
+                                                style={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: "999px",
+                                                    backgroundColor: info.color,
+                                                }}
+                                            />
+                                            {`Nivel ${nivelNumber} · ${info.label}`}
+                                            </span>
                                     ) : (
                                         <span className="text-slate-500 text-xs">Nivel sin info</span>
                                     )}

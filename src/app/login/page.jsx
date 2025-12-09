@@ -53,12 +53,14 @@ export default function LoginPage() {
     return (
         <Box
             sx={{
-                minHeight: "100vh",
+                minHeight: "calc(100vh - 64px)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 backgroundColor: "#f1f5f9",
                 padding: 2,
+                alignItems: "center",
+                transform: "translateY(-5%)"
             }}
         >
             <Card

@@ -1,4 +1,3 @@
-// app/medico/components/PriorityQueue.jsx
 "use client";
 
 const NIVEL_INFO = {
@@ -45,7 +44,7 @@ export function PriorityQueue({ cola, onAtender, loading }) {
                         </tr>
                     )}
 
-                    {cola.map((item) => {
+                    {cola.map((item, index) => {
                         const nombre = [item.nombre, item.apellido]
                             .filter(Boolean)
                             .join(" ");
@@ -54,8 +53,6 @@ export function PriorityQueue({ cola, onAtender, loading }) {
 
                         const nivelNumero = Number(item.nivel ?? item.prioridad);
                         const nivelInfo = NIVEL_INFO[nivelNumero] || null;
-
-                        const estado = item.nombreNivel; // Antes estaba en su propia columna
 
                         const fecha = item.fechaIngreso
                             ? new Date(item.fechaIngreso).toLocaleString("es-AR", {
@@ -72,7 +69,7 @@ export function PriorityQueue({ cola, onAtender, loading }) {
                                 {/* CUIL */}
                                 <td className="px-3 py-2 text-slate-600">{cuil}</td>
 
-                                {/* NIVEL + ESTADO UNIFICADOS */}
+                                {/* NIVEL */}
                                 <td className="px-3 py-2">
                                     {nivelInfo ? (
                                         <div className="space-y-1">

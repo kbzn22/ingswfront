@@ -17,7 +17,7 @@ export default function FormIngreso({ paciente, onCreate, onCancel }) {
 
   const resetForm = () => {
     setInforme("");
-    setNivelEmergencia("URGENCIA_MENOR");
+    setNivelEmergencia(4);
     setTemperatura("");
     setFrecuenciaCardiaca("");
     setFrecuenciaRespiratoria("");

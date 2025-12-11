@@ -1,118 +1,390 @@
 "use client";
 
+import {
+    Box,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    IconButton,
+    Typography,
+    Grid,
+    Chip,
+    Stack,
+    Paper,
+    Table,
+    TableBody,
+    TableRow,
+    TableCell,
+    Divider,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+
 export default function DetalleIngreso({ open, ingreso, onClose }) {
-  if (!open || !ingreso) return null;
+    if (!open || !ingreso) return null;
 
-  return (
-    <div
-      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4"
-      onClick={onClose} // 👈 click en el fondo cierra
-    >
-      <div
-        className="bg-white w-full max-w-lg max-h-[90vh] rounded-xl shadow-xl p-6 space-y-4 overflow-y-auto"
-        onClick={(e) => e.stopPropagation()} // 👈 evita que el click dentro cierre
-      >
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Detalle del ingreso</h2>
-          <button
-            className="text-gray-500 hover:text-gray-700"
-            onClick={onClose}
-          >
-            ✕
-          </button>
-        </div>
+    const nombrePaciente = `${ingreso.nombrePaciente || "-"} ${
+        ingreso.apellidoPaciente || ""
+    }`.trim();
 
-        {/* Paciente */}
-        <section className="space-y-1 border-b pb-3">
-          <h3 className="font-semibold text-lg">Paciente</h3>
+    const nombreEnfermera = `${ingreso.nombreEnfermera || "-"} ${
+        ingreso.apellidoEnfermera || ""
+    }`.trim();
 
-          <p className="text-sm text-gray-900">
-            <span className="font-medium">Nombre:</span>{" "}
-            {ingreso.nombrePaciente || "-"} {ingreso.apellidoPaciente || ""}
-          </p>
+    const fechaIngreso = ingreso.fechaIngreso
+        ? new Date(ingreso.fechaIngreso).toLocaleString("es-AR", {
+            dateStyle: "short",
+            timeStyle: "short",
+        })
+        : "-";
 
-          <p className="text-sm text-gray-900">
-            <span className="font-medium">CUIL:</span>{" "}
-            {ingreso.cuilPaciente || "-"}
-          </p>
+    const estado = ingreso.estado || "";
 
-          <p className="text-sm text-gray-900">
-            <span className="font-medium">Obra social:</span>{" "}
-            {ingreso.paciente.afiliado.obraSocial.nombre || "-"}{" "}
-            {ingreso.paciente.afiliado.numeroAfiliado && `(${ingreso.paciente.afiliado.numeroAfiliado})`}
-          </p>
-        </section>
+    const getEstadoColor = () => {
+        const e = estado.toLowerCase();
+        if (e.includes("curso") || e.includes("atención")) return "success";
+        if (e.includes("espera") || e.includes("cola")) return "warning";
+        if (e.includes("final")) return "default";
+        return "info";
+    };
 
-        {/* Enfermera */}
-        <section className="space-y-1 border-b pb-3">
-          <h3 className="font-semibold text-lg">Cargado por</h3>
+    const cellLabelSx = {
+        width: 150,
+        fontWeight: 600,
+        py: 0.75,
+        px: 1.5,
+        whiteSpace: "nowrap",
+    };
 
-          <p className="text-sm text-gray-900">
-            <span className="font-medium">Enfermera:</span>{" "}
-            {ingreso.nombreEnfermera || "-"} {ingreso.apellidoEnfermera || ""}
-          </p>
+    const cellValueSx = { py: 0.75, px: 1.5 };
 
-          <p className="text-sm text-gray-900">
-            <span className="font-medium">CUIL:</span>{" "}
-            {ingreso.cuilEnfermera || "-"}
-          </p>
-        </section>
+    const withUnit = (value, unit) =>
+        value === null || value === undefined || value === ""
+            ? "-"
+            : `${value} ${unit}`;
 
-        {/* Datos de ingreso */}
-        <section className="grid grid-cols-2 gap-y-2 text-sm border-b pb-3">
-          <div>
-            <span className="font-medium">Nivel:</span>
-            <p>
-              {ingreso.nivel} ·{" "}
-              <span className="text-gray-700">{ingreso.nombreNivel}</span>
-            </p>
-          </div>
+    return (
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    borderRadius: 3,
+                    overflow: "hidden",
+                },
+            }}
+        >
+            <DialogTitle
+                sx={{
+                    px: 3,
+                    py: 2,
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "grey.50",
+                }}
+            >
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 2,
+                    }}
+                >
+                    <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            Detalle del ingreso
+                        </Typography>
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                        >
+                            Información clínica del ingreso seleccionado
+                        </Typography>
+                    </Box>
 
-          <div>
-            <span className="font-medium">Estado:</span>
-            <p>{ingreso.estado}</p>
-          </div>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        {estado && (
+                            <Chip
+                                size="small"
+                                label={estado}
+                                color={getEstadoColor()}
+                                variant="outlined"
+                            />
+                        )}
+                        <IconButton size="small" onClick={onClose}>
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </Stack>
+                </Box>
+            </DialogTitle>
 
-          <div>
-            <span className="font-medium">Fecha ingreso:</span>
-            <p>
-              {ingreso.fechaIngreso
-                ? new Date(ingreso.fechaIngreso).toLocaleString("es-AR")
-                : "-"}
-            </p>
-          </div>
-        </section>
+            <DialogContent
+                sx={{
+                    bgcolor: "grey.50",
+                    px: 3,
+                    py: 2.5,
+                }}
+            >
+                <Grid
+                    container
+                    spacing={2}
+                    sx={{
+                        width: "100%",
+                        margin: 0,
+                    }}
+                >
+                    {/* PACIENTE */}
+                    <Grid item xs={12} md={6}>
+                        <Paper
+                            variant="outlined"
+                            sx={{
+                                borderRadius: 2,
+                                overflow: "hidden",
+                                height: "100%",
+                                display: "flex",
+                                flexDirection: "column",
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    px: 1.75,
+                                    py: 0.9,
+                                    borderBottom: "1px solid",
+                                    borderColor: "divider",
+                                    bgcolor: "grey.100",
+                                }}
+                            >
+                                <Typography
+                                    variant="subtitle2"
+                                    sx={{ fontWeight: 600 }}
+                                >
+                                    Paciente
+                                </Typography>
+                            </Box>
 
-        {/* Signos vitales */}
-        <section className="space-y-1 border-b pb-3">
-          <h3 className="font-semibold text-lg">Signos vitales</h3>
+                            <Table size="small">
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell sx={cellLabelSx}>Nombre</TableCell>
+                                        <TableCell sx={cellValueSx}>{nombrePaciente}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell sx={cellLabelSx}>CUIL</TableCell>
+                                        <TableCell sx={cellValueSx}>{ingreso.cuilPaciente || "-"}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell sx={cellLabelSx}>Obra social</TableCell>
+                                        <TableCell sx={cellValueSx}>
+                                            {ingreso.obraSocial || "-"}{" "}
+                                            {ingreso.numeroAfiliado && `(${ingreso.numeroAfiliado})`}
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </Paper>
+                    </Grid>
 
-          <p className="text-sm">
-            Temperatura: {ingreso.temperatura ?? "-"} °C
-          </p>
-          <p className="text-sm">
-            Frec. cardíaca: {ingreso.frecuenciaCardiaca ?? "-"} lpm
-          </p>
-          <p className="text-sm">
-            Frec. respiratoria: {ingreso.frecuenciaRespiratoria ?? "-"} rpm
-          </p>
-          <p className="text-sm">
-            Tensión arterial:{" "}
-            {ingreso.sistolica && ingreso.diastolica
-              ? `${ingreso.sistolica}/${ingreso.diastolica} mmHg`
-              : "-"}
-          </p>
-        </section>
+                    {/* DATOS DEL INGRESO */}
+                    <Grid item xs={12} md={6}>
+                        <Paper
+                            variant="outlined"
+                            sx={{
+                                borderRadius: 2,
+                                overflow: "hidden",
+                                height: "100%",
+                                display: "flex",
+                                flexDirection: "column",
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    px: 1.75,
+                                    py: 0.9,
+                                    borderBottom: "1px solid",
+                                    borderColor: "divider",
+                                    bgcolor: "grey.100",
+                                }}
+                            >
+                                <Typography
+                                    variant="subtitle2"
+                                    sx={{ fontWeight: 600 }}
+                                >
+                                    Datos del ingreso
+                                </Typography>
+                            </Box>
 
-        {/* Informe */}
-        <section>
-          <h3 className="font-semibold text-lg">Motivo / informe</h3>
-          <p className="text-sm whitespace-pre-line text-gray-900">
-            {ingreso.informe || "-"}
-          </p>
-        </section>
-      </div>
-    </div>
-  );
+                            <Table size="small">
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell sx={cellLabelSx}>Nivel</TableCell>
+                                        <TableCell sx={cellValueSx}>
+                                            {ingreso.nivel} · {ingreso.nombreNivel}
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell sx={cellLabelSx}>Fecha ingreso</TableCell>
+                                        <TableCell sx={cellValueSx}>{fechaIngreso}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell sx={cellLabelSx}>Estado</TableCell>
+                                        <TableCell sx={cellValueSx}>{ingreso.estado || "-"}</TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </Paper>
+                    </Grid>
+                </Grid>
+
+                {/* separador visual */}
+                <Box sx={{ my: 2 }}>
+                    <Divider />
+                </Box>
+
+                {/* FICHA CARGADO POR */}
+                <Paper
+                    variant="outlined"
+                    sx={{ borderRadius: 2, overflow: "hidden", mb: 2 }}
+                >
+                    <Box
+                        sx={{
+                            px: 1.75,
+                            py: 0.9,
+                            borderBottom: "1px solid",
+                            borderColor: "divider",
+                            bgcolor: "grey.100",
+                        }}
+                    >
+                        <Typography
+                            variant="subtitle2"
+                            sx={{ fontWeight: 600 }}
+                        >
+                            Cargado por
+                        </Typography>
+                    </Box>
+
+                    <Table size="small">
+                        <TableBody>
+                            <TableRow>
+                                <TableCell sx={cellLabelSx}>
+                                    Enfermera
+                                </TableCell>
+                                <TableCell sx={cellValueSx}>
+                                    {nombreEnfermera}
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={cellLabelSx}>CUIL</TableCell>
+                                <TableCell sx={cellValueSx}>
+                                    {ingreso.cuilEnfermera || "-"}
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </Paper>
+
+                {/* FICHA SIGNOS VITALES */}
+                <Paper
+                    variant="outlined"
+                    sx={{ borderRadius: 2, overflow: "hidden", mb: 2 }}
+                >
+                    <Box
+                        sx={{
+                            px: 1.75,
+                            py: 0.9,
+                            borderBottom: "1px solid",
+                            borderColor: "divider",
+                            bgcolor: "grey.100",
+                        }}
+                    >
+                        <Typography
+                            variant="subtitle2"
+                            sx={{ fontWeight: 600 }}
+                        >
+                            Signos vitales
+                        </Typography>
+                    </Box>
+
+                    <Table size="small">
+                        <TableBody>
+                            <TableRow>
+                                <TableCell sx={cellLabelSx}>
+                                    Temperatura
+                                </TableCell>
+                                <TableCell sx={cellValueSx}>
+                                    {withUnit(ingreso.temperatura, "°C")}
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={cellLabelSx}>
+                                    Frec. cardíaca
+                                </TableCell>
+                                <TableCell sx={cellValueSx}>
+                                    {withUnit(
+                                        ingreso.frecuenciaCardiaca,
+                                        "lpm"
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={cellLabelSx}>
+                                    Frec. respiratoria
+                                </TableCell>
+                                <TableCell sx={cellValueSx}>
+                                    {withUnit(
+                                        ingreso.frecuenciaRespiratoria,
+                                        "rpm"
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={cellLabelSx}>
+                                    Tensión arterial
+                                </TableCell>
+                                <TableCell sx={cellValueSx}>
+                                    {ingreso.sistolica &&
+                                    ingreso.diastolica
+                                        ? `${ingreso.sistolica}/${ingreso.diastolica} mmHg`
+                                        : "-"}
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </Paper>
+
+                {/* MOTIVO / INFORME */}
+                <Paper
+                    variant="outlined"
+                    sx={{ borderRadius: 2, overflow: "hidden" }}
+                >
+                    <Box
+                        sx={{
+                            px: 1.75,
+                            py: 0.9,
+                            borderBottom: "1px solid",
+                            borderColor: "divider",
+                            bgcolor: "grey.100",
+                        }}
+                    >
+                        <Typography
+                            variant="subtitle2"
+                            sx={{ fontWeight: 600 }}
+                        >
+                            Motivo / informe
+                        </Typography>
+                    </Box>
+
+                    <Box sx={{ px: 1.75, py: 1.25 }}>
+                        <Typography
+                            variant="body2"
+                            sx={{ whiteSpace: "pre-line" }}
+                        >
+                            {ingreso.informe || "-"}
+                        </Typography>
+                    </Box>
+                </Paper>
+            </DialogContent>
+        </Dialog>
+    );
 }

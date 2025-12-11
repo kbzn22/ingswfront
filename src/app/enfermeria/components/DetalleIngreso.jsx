@@ -39,8 +39,8 @@ export default function DetalleIngreso({ open, ingreso, onClose }) {
 
           <p className="text-sm text-gray-900">
             <span className="font-medium">Obra social:</span>{" "}
-            {ingreso.obraSocial || "-"}{" "}
-            {ingreso.numeroAfiliado && `(${ingreso.numeroAfiliado})`}
+            {ingreso.paciente.afiliado.obraSocial.nombre || "-"}{" "}
+            {ingreso.paciente.afiliado.numeroAfiliado && `(${ingreso.paciente.afiliado.numeroAfiliado})`}
           </p>
         </section>
 

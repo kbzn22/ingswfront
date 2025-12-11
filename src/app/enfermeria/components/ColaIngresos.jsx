@@ -3,14 +3,28 @@
 import { Card, CardContent, Typography, Box } from "@mui/material";
 import { NIVEL_EMERGENCIA_INFO } from "@/lib/enums";
 
+function parseFechaUtc(fechaIngresoStr) {
+    if (!fechaIngresoStr) return null;
+
+    // "2025-12-11T00:23:11.787533"
+    const [datePart, timePart] = fechaIngresoStr.split("T");
+    if (!timePart) return new Date(fechaIngresoStr);
+
+    const [year, month, day] = datePart.split("-").map(Number);
+    const [hour, minute, secondFrac] = timePart.split(":");
+    const seconds = parseFloat(secondFrac); // incluye fracción
+
+    // Creamos la fecha asumiendo que es UTC
+    return new Date(Date.UTC(year, month - 1, day, Number(hour), Number(minute), seconds));
+}
+
 function formatElapsed(fechaIngresoStr) {
-    if (!fechaIngresoStr) return "-";
+    const ingresoDate = parseFechaUtc(fechaIngresoStr);
+    if (!ingresoDate || isNaN(ingresoDate.getTime())) return "-";
 
-    const ingresoDate = new Date(fechaIngresoStr);
     const now = new Date();
-
     const diffMs = now.getTime() - ingresoDate.getTime();
-    const totalMinutes = Math.max(0, Math.floor(diffMs / 60000)); // nunca negativo
+    const totalMinutes = Math.max(0, Math.floor(diffMs / 60000));
 
     if (totalMinutes < 1) return "Espera: < 1 min";
     if (totalMinutes < 60) return `Espera: ${totalMinutes} min`;
@@ -21,6 +35,7 @@ function formatElapsed(fechaIngresoStr) {
     if (minutes === 0) return `Espera: ${hours} h`;
     return `Espera: ${hours} h ${minutes} min`;
 }
+
 
 export default function ColaIngresos({ ingresos, onSelect }) {
     return (

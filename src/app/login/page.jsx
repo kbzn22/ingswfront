@@ -59,7 +59,7 @@ export default function LoginPage() {
                 justifyContent: "center",
                 backgroundColor: "#f1f5f9",
                 padding: 2,
-                alignItems: "center",
+
                 transform: "translateY(-5%)"
             }}
         >

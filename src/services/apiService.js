@@ -1,18 +1,19 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
+// src/services/apiService.js
+export const API_URL =
+    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 function headers() {
     return {
-        'Content-Type': 'application/json',
-        // acá después podés agregar Authorization, etc.
+        "Content-Type": "application/json",
     };
 }
 
-async function apiGet(path) {
+export async function apiGet(path) {
     const res = await fetch(`${API_URL}${path}`, {
-        method: 'GET',
+        method: "GET",
         headers: headers(),
-        cache: 'no-store',
-        credentials: 'include', // si usás cookies de sesión, mejor incluirlo siempre
+        cache: "no-store",
+        credentials: "include",
     });
 
     let data = null;
@@ -20,27 +21,26 @@ async function apiGet(path) {
         try {
             data = await res.json();
         } catch {
-            // puede no haber body
+            // respuesta sin body
         }
     }
 
     if (!res.ok) {
-        const message = data?.message || `Error POST ${path}: ${res.status}`;
-
+        const message = data?.message || `Error GET ${path}: ${res.status}`;
         const error = new Error(message);
         error.status = res.status;
         error.data = data;
         throw error;
     }
 
-    return data; // puede ser null si 204
+    return data;
 }
 
-async function apiPost(path, body) {
+export async function apiPost(path, body) {
     const res = await fetch(`${API_URL}${path}`, {
-        method: 'POST',
+        method: "POST",
         headers: headers(),
-        credentials: 'include',
+        credentials: "include",
         body: body ? JSON.stringify(body) : undefined,
     });
 
@@ -48,22 +48,16 @@ async function apiPost(path, body) {
     if (res.status !== 204) {
         try {
             data = await res.json();
-        } catch {
-            // respuesta sin JSON, la dejamos en null
-        }
+        } catch {}
     }
 
     if (!res.ok) {
         const message = data?.message || `Error POST ${path}: ${res.status}`;
-
         const error = new Error(message);
         error.status = res.status;
         error.data = data;
         throw error;
     }
 
-    return data; // null si 204
+    return data;
 }
-
-
-export { API_URL, apiGet, apiPost };

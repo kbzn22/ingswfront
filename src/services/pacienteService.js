@@ -1,20 +1,14 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
+// src/services/pacienteService.js
+import { apiGet, apiPost } from "@/services/apiService";
 
 export async function buscarPacientePorCuil(cuilFormateado) {
-  const res = await fetch(`${BASE_URL}/pacientes/${cuilFormateado}`, {
-    credentials: "include",
-  });
-
-  if (res.status === 404) {
-    return null;
+  // backend: GET /api/pacientes/{cuil}
+  try {
+    return await apiGet(`/api/pacientes/${cuilFormateado}`);
+  } catch (e) {
+    if (e.status === 404) return null;
+    throw e;
   }
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || `Error ${res.status} al buscar paciente.`);
-  }
-
-  return res.json();
 }
 
 export async function registrarPacienteService(formPaciente) {
@@ -30,17 +24,5 @@ export async function registrarPacienteService(formPaciente) {
     ...(formPaciente.codigo && { numeroAfiliado: formPaciente.numeroAfiliado }),
   };
 
-  const res = await fetch(`${BASE_URL}/pacientes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || "Error al registrar paciente.");
-  }
-
-  return res.json();
+  return apiPost("/api/pacientes", body);
 }
